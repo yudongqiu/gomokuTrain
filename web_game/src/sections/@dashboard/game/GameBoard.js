@@ -49,18 +49,20 @@ export default function GameBoard({ title, subheader, boardState, gameState, han
     setIntersections(newIntersections);
   }, [title, subheader, boardState, gameState]); // cache key is needed to prevent infinite loop. Only run the effect once.
   
-  // const intersections = [];
-  // for (let i = 0; i < 15; i += 1) {
-  //   for (let j = 0; j < 15; j += 1) {
-  //     intersections.push(Stone({
-  //       row: i,
-  //       col: j,
-  //       value: boardState[i][j],
-  //       onPlay: () => handlePlayStone(i,j),
-  //       playing: gameState.playing,
-  //     }));
-  //   }    
-  // }
+  /* below is the simple version without performance optimization
+  const intersections = [];
+  for (let i = 0; i < 15; i += 1) {
+    for (let j = 0; j < 15; j += 1) {
+      intersections.push(Stone({
+        row: i,
+        col: j,
+        value: boardState[i][j],
+        onPlay: () => handlePlayStone(i,j),
+        playing: gameState.playing,
+      }));
+    }    
+  }
+  */
   const boardStyle = {
       width: 14 * GRID_SIZE + PADDING*2,
       height: 14 * GRID_SIZE + PADDING*2,

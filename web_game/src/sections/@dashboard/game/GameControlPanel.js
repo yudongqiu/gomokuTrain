@@ -1,7 +1,16 @@
 import PropTypes from 'prop-types';
 import { useState } from 'react';
 // @mui
-import { Card, CardHeader, CardContent, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, List, ListItem, Divider } from '@mui/material';
+import {
+  Card, CardHeader, CardContent,
+  Button,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
+  List, ListItem,
+  Divider,
+  FormControl, FormGroup, FormControlLabel,
+  Chip,
+  Box,
+} from '@mui/material';
 // components
 import Iconify from '../../../components/Iconify';
 // ----------------------------------------------------------------------
@@ -29,14 +38,11 @@ export default function GameControlPanel({ title, subheader, boardState, gameSta
       <CardContent>
         <GameInfo gameState={gameState}/>
         <Divider />
-        <List>
-          <ListItem>
-            <Button onClick={handleOpenDialog} variant="outlined" endIcon={<Iconify icon="ic:baseline-restart-alt" width={20} height={20} />}>
-              Restart
-            </Button>
-          </ListItem>
-        </List>
-        
+        <Box sx={{pt: 2}}>
+          <Button onClick={handleOpenDialog} variant="outlined" endIcon={<Iconify icon="ic:baseline-restart-alt" width={20} height={20} />}>
+            Restart
+          </Button>
+        </Box>
       </CardContent>
       <ResetDialog open={dialogOpen} handleClose={handleCloseDialog} onConfirm={() => {handleCloseDialog(); resetGame();}}/>
     </Card>
@@ -44,12 +50,19 @@ export default function GameControlPanel({ title, subheader, boardState, gameSta
 }
 
 export function GameInfo({ gameState }) {
-  
+  const player = gameState.winner || gameState.playing;
+  const style = {
+    width: 30,
+    height: 30,
+    borderRadius: "50%",
+    borderWidth: 1,
+    boxShadow: "2px 2px 4px 0 rgba(0, 0, 0, 0.25), -2px -2px 4px 0 rgba(255, 255, 255, 0.25)",
+    backgroundColor: player === 1 ? "#444" : "#eee",
+    marginRight: 15,
+  };
+  const status = gameState.winner > 0 ? <div>is winner <Iconify icon="emojione:party-popper" width={30} height={20} /></div>: <div>playing</div>;
   return (
-    <List>
-      <ListItem>Playing: {gameState.playing}</ListItem>
-    </List>
-    
+    <Box sx={{display: 'flex', pb: 2 }}><div style={style} /> {status}</Box>
   );
 }
 
