@@ -12,17 +12,20 @@ import { GameBoard, GameControlPanel } from '../sections/@dashboard/game';
 // empty board
 // 0 -> empty; 1 -> black stone; 2 -> white stone
 const getEmptyBoard = () => Array.from(Array(15), _ => Array(15).fill(0));
-const GAME_STATE = {
-  playing: 1,
-  winner: 0,
-  name: "Gomoku",
-}
+const getNewGameState = () => {
+  return {
+    playing: 1,
+    winner: 0,
+    name: "Gomoku",
+    lastMove: null
+  }
+};
 
 export default function GomokuGame() {
   const theme = useTheme();
   
   const [boardState, setBoardState] = useState( getEmptyBoard() );
-  const [gameState, setGameState] = useState( GAME_STATE );
+  const [gameState, setGameState] = useState( getNewGameState() );
 
   const handlePlayStone = (i, j) => {
     if (boardState[i][j] !== 0 || gameState.winner) return;
@@ -35,12 +38,13 @@ export default function GomokuGame() {
       ...gameState,
       winner,
       playing: winner ? 0 : 3 - gameState.playing,
+      lastMove: [i,j],
     });
   };
 
   const resetGame = () => {
     setBoardState(getEmptyBoard());
-    setGameState({...gameState, winner: 0, playing: 1});
+    setGameState(getNewGameState());
   }
 
   return (

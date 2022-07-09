@@ -24,6 +24,7 @@ export default function GameBoard({ title, subheader, boardState, gameState, han
           row: i,
           col: j,
           value: boardState[i][j],
+          isLastMove: gameState.lastMove && gameState.lastMove[0] === i && gameState.lastMove[1] === j,
         }));
       }
     }    
@@ -116,7 +117,7 @@ export default function GameBoard({ title, subheader, boardState, gameState, han
   );
 }
 
-function Stone({ row, col, value, onPlay, playing }) {
+function Stone({ row, col, value, onPlay, playing, isLastMove }) {
   const sx = {
     top: PADDING - GRID_SIZE/2 + row * GRID_SIZE+2,
     left: PADDING - GRID_SIZE/2 + col * GRID_SIZE+2,
@@ -128,12 +129,15 @@ function Stone({ row, col, value, onPlay, playing }) {
     zIndex: 2,
     transition: "0.1s",
   };
+  const boxShadow = isLastMove
+    ? "2px 2px 4px 2px rgba(220, 50, 50, 0.5), -2px -2px 4px 0 rgba(220, 150, 150, 0.5)"
+    : "2px 2px 4px 0 rgba(0, 0, 0, 0.25), -2px -2px 4px 0 rgba(255, 255, 255, 0.25)";
   if (value === 1) {
     sx.backgroundColor = "#444";
-    sx.boxShadow = "2px 2px 4px 0 rgba(0, 0, 0, 0.25), -2px -2px 4px 0 rgba(255, 255, 255, 0.25)";
+    sx.boxShadow = boxShadow;
   } else if (value === 2) {
     sx.backgroundColor = "#eee";
-    sx.boxShadow = "2px 2px 4px 0 rgba(0, 0, 0, 0.25), -2px -2px 4px 0 rgba(255, 255, 255, 0.25)";
+    sx.boxShadow = boxShadow;
   } else if (playing) {
     sx['&:hover'] = {
       backgroundColor: playing === 1 ? "rgba(100, 100, 100, 0.4)" : "rgba(250, 250, 250, 0.5)"
