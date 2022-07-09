@@ -12,23 +12,24 @@ import { GameBoard, GameControlPanel } from '../sections/@dashboard/game';
 // empty board
 // 0 -> empty; 1 -> black stone; 2 -> white stone
 const getEmptyBoard = () => Array.from(Array(15), _ => Array(15).fill(0));
-const getNewGameState = () => {
-  return {
-    playing: 1,
-    winner: 0,
-    name: "Gomoku",
-    moveHistory: [],
-    settings: {
-      showHistoryIdx: true,
-    },
-  }
-};
+// full state of the current game, can be used to reproduce game board
+const getNewGameState = () => ({
+  playing: 1,
+  winner: 0,
+  moveHistory: [],
+});
+// settings that does not need reset every game
+const getNewGameSettings = () => ({
+  gameName: "Gomoku",
+  showHistoryIdx: false,
+});
 
 export default function GomokuGame() {
   const theme = useTheme();
   
   const [boardState, setBoardState] = useState( getEmptyBoard() );
   const [gameState, setGameState] = useState( getNewGameState() );
+  const [gameSettings, setGameSettings] = useState( getNewGameSettings() );
 
   const handlePlayStone = (i, j) => {
     if (boardState[i][j] !== 0 || gameState.winner) return;
@@ -46,13 +47,9 @@ export default function GomokuGame() {
   };
 
   const handleUpdateSettings = (key, value) => {
-    const newSettings = {
-      ...gameState.settings,
+    setGameSettings(gameSettings => ({
+      ...gameSettings,
       [key]: value,
-    };
-    setGameState(gameState => ({
-      ...gameState,
-      settings: newSettings,
     }));
   }
 
@@ -71,9 +68,10 @@ export default function GomokuGame() {
         <Grid container spacing={3}>
           <Grid item xs={12} md={8} lg={9}>
             <GameBoard
-              title={gameState.name}
+              title={gameSettings.name}
               boardState={boardState}
               gameState={gameState}
+              gameSettings={gameSettings}
               handlePlayStone={handlePlayStone}
             />
           </Grid>
@@ -81,8 +79,8 @@ export default function GomokuGame() {
           <Grid item xs={12} md={4} lg={3}>
             <GameControlPanel
               title="Game Control"
-              boardState={boardState}
               gameState={gameState}
+              gameSettings={gameSettings}
               resetGame={resetGame}
               handleUpdateSettings={handleUpdateSettings}
             />

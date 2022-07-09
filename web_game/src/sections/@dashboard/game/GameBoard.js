@@ -15,12 +15,12 @@ GameBoard.propTypes = {
 const GRID_SIZE = 40;
 const PADDING = 40;
 
-export default function GameBoard({ title, subheader, boardState, gameState, handlePlayStone }) {
+export default function GameBoard({ title, subheader, boardState, gameState, gameSettings, handlePlayStone }) {
   const stones = gameState.moveHistory.map(([i,j,player], idx) => Stone({
     row: i,
     col: j,
     value: player,
-    historyIdx: gameState.settings.showHistoryIdx ? idx : undefined,
+    historyIdx: gameSettings.showHistoryIdx ? idx : undefined,
     isLastMove: idx === gameState.moveHistory.length - 1,
   }));
   // lazy render the intersections to improve performance

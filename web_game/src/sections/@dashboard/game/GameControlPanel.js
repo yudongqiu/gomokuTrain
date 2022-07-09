@@ -21,7 +21,7 @@ GameControlPanel.propTypes = {
   subheader: PropTypes.string,
 };
 
-export default function GameControlPanel({ title, subheader, gameState, resetGame, handleUpdateSettings }) {
+export default function GameControlPanel({ title, subheader, gameState, gameSettings, resetGame, handleUpdateSettings }) {
   
   const [dialogOpen, setDialogOpen ] = useState(false);
 
@@ -39,7 +39,7 @@ export default function GameControlPanel({ title, subheader, gameState, resetGam
       <CardContent>
         <GameInfo gameState={gameState}/>
         <Divider />
-        <AppearanceSettings gameState={gameState} handleUpdateSettings={handleUpdateSettings}/>
+        <AppearanceSettings gameSettings={gameSettings} handleUpdateSettings={handleUpdateSettings}/>
         <Divider />
         <Box sx={{pt: 2}}>
           <Button onClick={handleOpenDialog} variant="outlined" endIcon={<Iconify icon="ic:baseline-restart-alt" width={20} height={20} />}>
@@ -69,10 +69,9 @@ export function GameInfo({ gameState }) {
   );
 }
 
-export function AppearanceSettings({ gameState, handleUpdateSettings }) {
-  const settings = gameState.settings || {};
+export function AppearanceSettings({ gameSettings, handleUpdateSettings }) {
   const handleToggleSetting = (fieldName) => {
-    const currentValue = settings[fieldName];
+    const currentValue = gameSettings[fieldName];
     handleUpdateSettings(fieldName, !currentValue);
   };
   return (
@@ -82,7 +81,7 @@ export function AppearanceSettings({ gameState, handleUpdateSettings }) {
         <FormGroup>
           <FormControlLabel
             control={
-              <Switch checked={settings.showHistoryIdx} onChange={() => handleToggleSetting("showHistoryIdx")} />
+              <Switch checked={gameSettings.showHistoryIdx} onChange={() => handleToggleSetting("showHistoryIdx")} />
             }
             label="Show History"
           />
