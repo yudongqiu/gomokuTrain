@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 // @mui
 import { Card, CardHeader, CardContent, Box } from '@mui/material';
+import { useState, useEffect } from 'react';
 // components
 
 // ----------------------------------------------------------------------
@@ -15,18 +16,51 @@ const GRID_SIZE = 40;
 const PADDING = 40;
 
 export default function GameBoard({ title, subheader, boardState, gameState, handlePlayStone }) {
-  const intersections = [];
+  const stones = [];
   for (let i = 0; i < 15; i += 1) {
     for (let j = 0; j < 15; j += 1) {
-      intersections.push(Stone({
-        row: i,
-        col: j,
-        value: boardState[i][j],
-        onPlay: () => handlePlayStone(i,j),
-        playing: gameState.playing,
-      }));
+      if (boardState[i][j] !== 0) {
+        stones.push(Stone({
+          row: i,
+          col: j,
+          value: boardState[i][j],
+        }));
+      }
     }    
   }
+  // lazy render the intersections to improve performance
+  // This is because the hover effect of all intersections needs to be updated after every move
+  const [ intersections, setIntersections ] = useState([]);
+  useEffect(() => {
+    const newIntersections = [];
+    for (let i = 0; i < 15; i += 1) {
+      for (let j = 0; j < 15; j += 1) {
+        if (boardState[i][j] === 0) {
+          newIntersections.push(Stone({
+            row: i,
+            col: j,
+            value: boardState[i][j],
+            onPlay: () => handlePlayStone(i,j),
+            playing: gameState.playing,
+          }));
+        }
+      }    
+    }
+    setIntersections(newIntersections);
+  }, [title, subheader, boardState, gameState]); // cache key is needed to prevent infinite loop. Only run the effect once.
+  
+  // const intersections = [];
+  // for (let i = 0; i < 15; i += 1) {
+  //   for (let j = 0; j < 15; j += 1) {
+  //     intersections.push(Stone({
+  //       row: i,
+  //       col: j,
+  //       value: boardState[i][j],
+  //       onPlay: () => handlePlayStone(i,j),
+  //       playing: gameState.playing,
+  //     }));
+  //   }    
+  // }
   const boardStyle = {
       width: 14 * GRID_SIZE + PADDING*2,
       height: 14 * GRID_SIZE + PADDING*2,
@@ -69,16 +103,16 @@ export default function GameBoard({ title, subheader, boardState, gameState, han
   return (
     <Card>
       <CardHeader title={title} subheader={subheader} />
-      <CardContent sx={{ p: 3, minWidth: 700 }}>
+      <CardContent sx={{ p: 3 }}>
         <div style={boardStyle} id="board">
           <div style={gridStyle}>{stars}</div>
+          {stones}
           {intersections}
         </div>
       </CardContent>
     </Card>
   );
 }
-
 
 function Stone({ row, col, value, onPlay, playing }) {
   const sx = {
@@ -90,6 +124,7 @@ function Stone({ row, col, value, onPlay, playing }) {
     position: "absolute",
     boxSizing: "border-box",
     zIndex: 2,
+    transition: "0.1s",
   };
   if (value === 1) {
     sx.backgroundColor = "#444";

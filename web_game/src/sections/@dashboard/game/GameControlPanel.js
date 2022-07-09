@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { useState } from 'react';
 // @mui
-import { Card, CardHeader, CardContent, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, List, ListItem } from '@mui/material';
+import { Card, CardHeader, CardContent, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, List, ListItem, Divider } from '@mui/material';
 // components
 import Iconify from '../../../components/Iconify';
 // ----------------------------------------------------------------------
@@ -28,9 +28,15 @@ export default function GameControlPanel({ title, subheader, boardState, gameSta
       <CardHeader title={title} subheader={subheader} />
       <CardContent>
         <GameInfo gameState={gameState}/>
-        <Button onClick={handleOpenDialog} variant="outlined" endIcon={<Iconify icon="ic:baseline-restart-alt" width={20} height={20} />}>
-          Restart
-        </Button>
+        <Divider />
+        <List>
+          <ListItem>
+            <Button onClick={handleOpenDialog} variant="outlined" endIcon={<Iconify icon="ic:baseline-restart-alt" width={20} height={20} />}>
+              Restart
+            </Button>
+          </ListItem>
+        </List>
+        
       </CardContent>
       <ResetDialog open={dialogOpen} handleClose={handleCloseDialog} onConfirm={() => {handleCloseDialog(); resetGame();}}/>
     </Card>

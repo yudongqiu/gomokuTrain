@@ -1,23 +1,10 @@
-import { faker } from '@faker-js/faker';
+import { useState } from 'react';
 // @mui
 import { useTheme } from '@mui/material/styles';
 import { Grid, Container, Typography } from '@mui/material';
-import { useState, useRef } from 'react';
 // components
 import Page from '../components/Page';
-import Iconify from '../components/Iconify';
 // sections
-import {
-  AppTasks,
-  AppNewsUpdate,
-  AppOrderTimeline,
-  AppCurrentVisits,
-  AppWebsiteVisits,
-  AppTrafficBySite,
-  AppWidgetSummary,
-  AppCurrentSubject,
-  AppConversionRates,
-} from '../sections/@dashboard/app';
 import { GameBoard, GameControlPanel } from '../sections/@dashboard/game';
 
 // ----------------------------------------------------------------------
