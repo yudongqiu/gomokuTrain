@@ -1,4 +1,4 @@
-import PropTypes from 'prop-types';
+import PropTypes, { number } from 'prop-types';
 // @mui
 import { Card, CardHeader, CardContent, Box } from '@mui/material';
 import { useState, useEffect } from 'react';
@@ -16,19 +16,13 @@ const GRID_SIZE = 40;
 const PADDING = 40;
 
 export default function GameBoard({ title, subheader, boardState, gameState, handlePlayStone }) {
-  const stones = [];
-  for (let i = 0; i < 15; i += 1) {
-    for (let j = 0; j < 15; j += 1) {
-      if (boardState[i][j] !== 0) {
-        stones.push(Stone({
-          row: i,
-          col: j,
-          value: boardState[i][j],
-          isLastMove: gameState.lastMove && gameState.lastMove[0] === i && gameState.lastMove[1] === j,
-        }));
-      }
-    }    
-  }
+  const stones = gameState.moveHistory.map(([i,j,player], idx) => Stone({
+    row: i,
+    col: j,
+    value: player,
+    historyIdx: gameState.settings.showHistoryIdx ? idx : undefined,
+    isLastMove: idx === gameState.moveHistory.length - 1,
+  }));
   // lazy render the intersections to improve performance
   // This is because the hover effect of all intersections needs to be updated after every move
   const [ intersections, setIntersections ] = useState([]);
@@ -73,6 +67,7 @@ export default function GameBoard({ title, subheader, boardState, gameState, han
       paddingTop: PADDING,
       margin: 'auto',
       boxShadow: "2px 2px 4px 0 rgba(0, 0, 0, 0.25), -2px -2px 4px 0 rgba(255, 255, 255, 0.25)",
+      draggable: false,
   };
   const gridStyle = {
     width: "100%",
@@ -117,7 +112,7 @@ export default function GameBoard({ title, subheader, boardState, gameState, han
   );
 }
 
-function Stone({ row, col, value, onPlay, playing, isLastMove }) {
+function Stone({ row, col, value, onPlay, playing, historyIdx, isLastMove }) {
   const sx = {
     top: PADDING - GRID_SIZE/2 + row * GRID_SIZE+2,
     left: PADDING - GRID_SIZE/2 + col * GRID_SIZE+2,
@@ -128,6 +123,8 @@ function Stone({ row, col, value, onPlay, playing, isLastMove }) {
     boxSizing: "border-box",
     zIndex: 2,
     transition: "0.1s",
+    display: "flex",
+    userSelect: "none",
   };
   const boxShadow = isLastMove
     ? "2px 2px 4px 2px rgba(220, 50, 50, 0.5), -2px -2px 4px 0 rgba(220, 150, 150, 0.5)"
@@ -143,5 +140,10 @@ function Stone({ row, col, value, onPlay, playing, isLastMove }) {
       backgroundColor: playing === 1 ? "rgba(100, 100, 100, 0.4)" : "rgba(250, 250, 250, 0.5)"
     };
   }
-  return <Box key={row*15 + col} sx={sx} onClick={onPlay} />;
+  let historyNumber;
+  if (historyIdx !== undefined) {
+    const numberColor = value === 1 ? "#eee" : "#444";
+    historyNumber = <div style={{ color: numberColor, margin: "auto" }}>{historyIdx+1}</div>
+  }
+  return <Box key={row*15 + col} sx={sx} onClick={onPlay}>{historyNumber}</Box>;
 }

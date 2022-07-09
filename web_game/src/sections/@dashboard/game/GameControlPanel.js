@@ -7,8 +7,9 @@ import {
   Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
   List, ListItem,
   Divider,
-  FormControl, FormGroup, FormControlLabel,
+  FormControl, FormGroup, FormControlLabel, FormLabel, FormHelperText,
   Chip,
+  Switch,
   Box,
 } from '@mui/material';
 // components
@@ -20,7 +21,7 @@ GameControlPanel.propTypes = {
   subheader: PropTypes.string,
 };
 
-export default function GameControlPanel({ title, subheader, boardState, gameState, resetGame }) {
+export default function GameControlPanel({ title, subheader, gameState, resetGame, handleUpdateSettings }) {
   
   const [dialogOpen, setDialogOpen ] = useState(false);
 
@@ -37,6 +38,8 @@ export default function GameControlPanel({ title, subheader, boardState, gameSta
       <CardHeader title={title} subheader={subheader} />
       <CardContent>
         <GameInfo gameState={gameState}/>
+        <Divider />
+        <AppearanceSettings gameState={gameState} handleUpdateSettings={handleUpdateSettings}/>
         <Divider />
         <Box sx={{pt: 2}}>
           <Button onClick={handleOpenDialog} variant="outlined" endIcon={<Iconify icon="ic:baseline-restart-alt" width={20} height={20} />}>
@@ -63,6 +66,29 @@ export function GameInfo({ gameState }) {
   const status = gameState.winner > 0 ? <div>is winner <Iconify icon="emojione:party-popper" width={30} height={20} /></div>: <div>playing</div>;
   return (
     <Box sx={{display: 'flex', pb: 2 }}><div style={style} /> {status}</Box>
+  );
+}
+
+export function AppearanceSettings({ gameState, handleUpdateSettings }) {
+  const settings = gameState.settings || {};
+  const handleToggleSetting = (fieldName) => {
+    const currentValue = settings[fieldName];
+    handleUpdateSettings(fieldName, !currentValue);
+  };
+  return (
+    <Box sx={{pt: 2, pb: 2}}>
+      <FormControl component="fieldset" variant="standard">
+        <FormLabel component="legend">Appearance</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={
+              <Switch checked={settings.showHistoryIdx} onChange={() => handleToggleSetting("showHistoryIdx")} />
+            }
+            label="Show History"
+          />
+        </FormGroup>
+      </FormControl>
+    </Box>
   );
 }
 

@@ -17,7 +17,10 @@ const getNewGameState = () => {
     playing: 1,
     winner: 0,
     name: "Gomoku",
-    lastMove: null
+    moveHistory: [],
+    settings: {
+      showHistoryIdx: true,
+    },
   }
 };
 
@@ -34,13 +37,24 @@ export default function GomokuGame() {
     setBoardState(newboardState);
     // check winner, switch player if no winner
     const winner = checkWinner(boardState, [i,j], gameState.playing);
-    setGameState({
+    setGameState(gameState => ({
       ...gameState,
       winner,
       playing: winner ? 0 : 3 - gameState.playing,
-      lastMove: [i,j],
-    });
+      moveHistory: [...gameState.moveHistory, [i,j,gameState.playing]],
+    }));
   };
+
+  const handleUpdateSettings = (key, value) => {
+    const newSettings = {
+      ...gameState.settings,
+      [key]: value,
+    };
+    setGameState(gameState => ({
+      ...gameState,
+      settings: newSettings,
+    }));
+  }
 
   const resetGame = () => {
     setBoardState(getEmptyBoard());
@@ -70,6 +84,7 @@ export default function GomokuGame() {
               boardState={boardState}
               gameState={gameState}
               resetGame={resetGame}
+              handleUpdateSettings={handleUpdateSettings}
             />
           </Grid>
         </Grid>
