@@ -27,7 +27,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CircleIcon from '@mui/icons-material/Circle';
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 // components
-import { AIMODE } from '../../../utils/constants';
+import { AIMODE, SERVER_STATUS } from '../../../utils/constants';
 // ----------------------------------------------------------------------
 
 GameControlPanel.propTypes = {
@@ -166,6 +166,14 @@ export function ResetDialog({ open, handleClose, onConfirm }) {
 }
 
 export function AIControls({ serverState, gameSettings, handleUpdateSettings }) {
+  let statusChip;
+  if (serverState.status === SERVER_STATUS.IDLE) {
+    statusChip = <Chip label="Idle" color="info" size="small" />;
+  } else if (serverState.status === SERVER_STATUS.BUSY) {
+    statusChip = <Chip label="Busy" color="warning" size="small" />;
+  } else if (serverState.status === SERVER_STATUS.NO_CONNECTION) {
+    statusChip = <Chip label="Disconnected" color="default" size="small" />;
+  }
   return (
     <List
       sx={{ width: '100%', maxWidth: 360 }}
@@ -173,7 +181,11 @@ export function AIControls({ serverState, gameSettings, handleUpdateSettings }) 
       dense
     >
       <ListItem disableGutters>
-        <ListItemText primary={`Server State: ${serverState.status}`} />
+        <ListItemIcon sx={{ minWidth:30 }}>
+          <SmartToyIcon />
+        </ListItemIcon>
+        <ListItemText primary="Server State" />
+        {statusChip}
       </ListItem>
       <ListItem disableGutters>
         <ListItemIcon sx={{ minWidth:30 }}>
