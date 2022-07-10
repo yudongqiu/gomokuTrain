@@ -22,6 +22,7 @@ const getNewGameState = () => ({
 const getNewGameSettings = () => ({
   gameName: "Gomoku",
   showHistoryIdx: false,
+  boardColor: "#f1b06c",
 });
 
 export default function GomokuGame() {
@@ -57,6 +58,28 @@ export default function GomokuGame() {
     setBoardState(getEmptyBoard());
     setGameState(getNewGameState());
   }
+  
+  const undoLastMove = () => {
+    const moveHistory = gameState.moveHistory;
+    const lastMove = moveHistory && moveHistory[moveHistory.length-1];
+    // update board state to remove last move
+    const [i, j, playing] = lastMove;
+    const newboardState = [...boardState];
+    newboardState[i][j] = 0;
+    setBoardState(newboardState);
+    // update game state
+    setGameState(gameState => ({
+      ...gameState,
+      playing,
+      winner: 0,
+      moveHistory: moveHistory.slice(0, -1),
+    }));
+  }
+
+  const gameControls = {
+    resetGame,
+    undoLastMove,
+  }
 
   return (
     <Page title="Game">
@@ -81,7 +104,7 @@ export default function GomokuGame() {
               title="Game Control"
               gameState={gameState}
               gameSettings={gameSettings}
-              resetGame={resetGame}
+              gameControls={gameControls}
               handleUpdateSettings={handleUpdateSettings}
             />
           </Grid>

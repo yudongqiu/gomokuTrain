@@ -62,7 +62,7 @@ export default function GameBoard({ title, subheader, boardState, gameState, gam
       width: 14 * GRID_SIZE + PADDING*2,
       height: 14 * GRID_SIZE + PADDING*2,
       position: "relative",
-      backgroundColor: "#f1b06c",
+      backgroundColor: gameSettings.boardColor,
       padding: PADDING,
       paddingTop: PADDING,
       margin: 'auto',
