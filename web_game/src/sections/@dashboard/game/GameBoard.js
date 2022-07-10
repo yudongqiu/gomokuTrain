@@ -22,6 +22,7 @@ export default function GameBoard({ title, subheader, boardState, gameState, gam
     value: player,
     historyIdx: gameSettings.showHistoryIdx ? idx : undefined,
     isLastMove: idx === gameState.moveHistory.length - 1,
+    isWinningLine: gameState.winningMoves.some((move) => move[0] === i && move[1] === j),
   }));
   // lazy render the intersections to improve performance
   // This is because the hover effect of all intersections needs to be updated after every move
@@ -112,7 +113,7 @@ export default function GameBoard({ title, subheader, boardState, gameState, gam
   );
 }
 
-function Stone({ row, col, value, onPlay, playing, historyIdx, isLastMove }) {
+function Stone({ row, col, value, onPlay, playing, historyIdx, isLastMove, isWinningLine }) {
   const sx = {
     top: PADDING - GRID_SIZE/2 + row * GRID_SIZE+2,
     left: PADDING - GRID_SIZE/2 + col * GRID_SIZE+2,
@@ -126,9 +127,15 @@ function Stone({ row, col, value, onPlay, playing, historyIdx, isLastMove }) {
     display: "flex",
     userSelect: "none",
   };
-  const boxShadow = isLastMove
-    ? "2px 2px 4px 2px rgba(220, 50, 50, 0.5), -2px -2px 4px 0 rgba(220, 150, 150, 0.5)"
-    : "2px 2px 4px 0 rgba(0, 0, 0, 0.25), -2px -2px 4px 0 rgba(255, 255, 255, 0.25)";
+  // use different shadow colors for last move and winning moves
+  let boxShadow;
+  if (isLastMove) {
+    boxShadow = "2px 2px 4px 2px rgba(252, 3, 48, 0.25), -2px -2px 4px 0 rgba(255, 150, 200, 0.25)";
+  } else if (isWinningLine) {
+    boxShadow = "2px 2px 4px 2px rgba(252, 30, 250, 0.25), -2px -2px 4px 0 rgba(255, 150, 250, 0.25)";
+  } else {
+    boxShadow = "2px 2px 4px 0 rgba(0, 0, 0, 0.25), -2px -2px 4px 0 rgba(255, 255, 255, 0.25)";
+  }
   if (value === 1) {
     sx.backgroundColor = "#444";
     sx.boxShadow = boxShadow;

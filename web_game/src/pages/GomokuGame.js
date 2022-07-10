@@ -17,6 +17,7 @@ const getNewGameState = () => ({
   playing: 1,
   winner: 0,
   moveHistory: [],
+  winningMoves: [],
 });
 // settings that does not need reset every game
 const getNewGameSettings = () => ({
@@ -38,11 +39,12 @@ export default function GomokuGame() {
     newboardState[i][j] = gameState.playing;
     setBoardState(newboardState);
     // check winner, switch player if no winner
-    const winner = checkWinner(boardState, [i,j], gameState.playing);
+    const winningMoves = checkWinningMoves(boardState, [i,j], gameState.playing);
     setGameState(gameState => ({
       ...gameState,
-      winner,
-      playing: winner ? 0 : 3 - gameState.playing,
+      winner: winningMoves.length > 0 ? gameState.playing: 0,
+      playing: winningMoves.length > 0 ? 0 : 3 - gameState.playing,
+      winningMoves,
       moveHistory: [...gameState.moveHistory, [i,j,gameState.playing]],
     }));
   };
@@ -67,12 +69,13 @@ export default function GomokuGame() {
     const newboardState = [...boardState];
     newboardState[i][j] = 0;
     setBoardState(newboardState);
-    // update game state
+    // update game state, reset winner if exist
     setGameState(gameState => ({
       ...gameState,
       playing,
       winner: 0,
       moveHistory: moveHistory.slice(0, -1),
+      winningMoves: [],
     }));
   }
 
@@ -119,14 +122,15 @@ export default function GomokuGame() {
  * @param {*} boardState the state of the board before or after last move
  * @param {*} lastMove the last move just played
  * @param {*} playing the player who just played. Other players are not checked
- * @returns playing if winner otherwise 0
+ * @returns array of 5 stone locations as winning moves, otherwise empty
  */
-function checkWinner(boardState, lastMove, playing) {
+function checkWinningMoves(boardState, lastMove, playing) {
   const [r, c] = lastMove;
   // try all 4 directions, the other 4 is included
   const directions = [[1,1], [1,0], [0,1], [1,-1]];
-  const found = directions.find(([dr, dc]) => {
-    let lineLength = 1;
+  for (let di=0; di < directions.length; di += 1) {
+    const [dr, dc] = directions[di];
+    const winningLine = [[r,c]];
     // try to extend in the positive direction
     let extR = r;
     let extC = c;
@@ -136,7 +140,7 @@ function checkWinner(boardState, lastMove, playing) {
       if (extR < 0 || extR >= 15 || extC < 0 || extC >= 15) {
         break;
       } else if (boardState[extR][extC] === playing) {
-        lineLength += 1;
+        winningLine.push([extR, extC]);
       } else {
         break;
       }
@@ -147,17 +151,18 @@ function checkWinner(boardState, lastMove, playing) {
     for (let i = 0; i < 5; i += 1) {
       extR -= dr;
       extC -= dc;
-      if (extR < 0 || extR >= 15 || extC < 0 || extC >= 15 || lineLength > 5) {
+      if (extR < 0 || extR >= 15 || extC < 0 || extC >= 15 || winningLine.length > 5) {
         break;
       } else if (boardState[extR][extC] === playing) {
-        lineLength += 1;
+        winningLine.push([extR, extC]);
       } else {
         break;
       }
     }
     // only win if exactly 5 in a row (6 or more does not count)
-    return lineLength === 5;
-  });
-  // if found winner, return playing
-  return found !== undefined ? playing : 0;
+    if (winningLine.length === 5) {
+      return winningLine;
+    }
+  };
+  return [];
 }
