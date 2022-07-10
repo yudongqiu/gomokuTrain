@@ -27,6 +27,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CircleIcon from '@mui/icons-material/Circle';
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 // components
+import { AIMODE } from '../../../utils/constants';
 // ----------------------------------------------------------------------
 
 GameControlPanel.propTypes = {
@@ -34,7 +35,7 @@ GameControlPanel.propTypes = {
   subheader: PropTypes.string,
 };
 
-export default function GameControlPanel({ title, subheader, gameState, gameSettings, gameControls, handleUpdateSettings }) {
+export default function GameControlPanel({ title, subheader, gameState, serverState, gameSettings, gameControls, handleUpdateSettings }) {
   return (
     <Card>
       <CardHeader title={title} subheader={subheader} />
@@ -44,7 +45,7 @@ export default function GameControlPanel({ title, subheader, gameState, gameSett
         <Divider />
         <AppearanceSettings gameSettings={gameSettings} handleUpdateSettings={handleUpdateSettings}/>
         <Divider />
-        <AIControls gameSettings={gameSettings} handleUpdateSettings={handleUpdateSettings}/>
+        <AIControls serverState={serverState} gameSettings={gameSettings} handleUpdateSettings={handleUpdateSettings}/>
       </CardContent>
     </Card>
   );
@@ -164,17 +165,16 @@ export function ResetDialog({ open, handleClose, onConfirm }) {
   );
 }
 
-export function AIControls({ gameSettings, handleUpdateSettings }) {
-  const handleToggleSetting = (fieldName) => {
-    const currentValue = gameSettings[fieldName];
-    handleUpdateSettings(fieldName, !currentValue);
-  };
+export function AIControls({ serverState, gameSettings, handleUpdateSettings }) {
   return (
     <List
       sx={{ width: '100%', maxWidth: 360 }}
       subheader={<ListSubheader sx={{pl: 0}}>AI</ListSubheader>}
       dense
     >
+      <ListItem disableGutters>
+        <ListItemText primary={`Server State: ${serverState.status}`} />
+      </ListItem>
       <ListItem disableGutters>
         <ListItemIcon sx={{ minWidth:30 }}>
           <CircleIcon />
@@ -186,14 +186,14 @@ export function AIControls({ gameSettings, handleUpdateSettings }) {
           onChange={(_, value) => handleUpdateSettings("AIBlack", value)}
           size="small"
         >
-          <Tooltip title="Disabled" value="disabled">
-            <ToggleButton value="disabled"><DoNotDisturbIcon /></ToggleButton>
+          <Tooltip title="Disabled" value={AIMODE.DISABLED}>
+            <ToggleButton value={AIMODE.DISABLED}><DoNotDisturbIcon /></ToggleButton>
           </Tooltip>
-          <Tooltip title="Enable Prediction" value="predict">
-            <ToggleButton value="predict" color="info"><OnlinePredictionIcon /></ToggleButton>
+          <Tooltip title="Enable Prediction" value={AIMODE.PREDICT}>
+            <ToggleButton value={AIMODE.PREDICT} color="info"><OnlinePredictionIcon /></ToggleButton>
           </Tooltip>
-          <Tooltip title="Enable Autoplay" value="play">
-            <ToggleButton value="play" color="success"><PlayArrowIcon /></ToggleButton>
+          <Tooltip title="Enable Autoplay" value={AIMODE.AUTOPLAY}>
+            <ToggleButton value={AIMODE.AUTOPLAY} color="success"><PlayArrowIcon /></ToggleButton>
           </Tooltip>
         </ToggleButtonGroup>
       </ListItem>
@@ -208,14 +208,14 @@ export function AIControls({ gameSettings, handleUpdateSettings }) {
           onChange={(_, value) => handleUpdateSettings("AIWhite", value)}
           size="small"
         >
-          <Tooltip title="Disabled" value="disabled">
-            <ToggleButton value="disabled"><DoNotDisturbIcon /></ToggleButton>
+          <Tooltip title="Disabled" value={AIMODE.DISABLED}>
+            <ToggleButton value={AIMODE.DISABLED}><DoNotDisturbIcon /></ToggleButton>
           </Tooltip>
-          <Tooltip title="Enable Prediction" value="predict">
-            <ToggleButton value="predict" color="info"><OnlinePredictionIcon /></ToggleButton>
+          <Tooltip title="Enable Prediction" value={AIMODE.PREDICT}>
+            <ToggleButton value={AIMODE.PREDICT} color="info"><OnlinePredictionIcon /></ToggleButton>
           </Tooltip>
-          <Tooltip title="Enable Autoplay" value="play">
-            <ToggleButton value="play" color="success"><PlayArrowIcon /></ToggleButton>
+          <Tooltip title="Enable Autoplay" value={AIMODE.AUTOPLAY}>
+            <ToggleButton value={AIMODE.AUTOPLAY} color="success"><PlayArrowIcon /></ToggleButton>
           </Tooltip>
         </ToggleButtonGroup>
       </ListItem>

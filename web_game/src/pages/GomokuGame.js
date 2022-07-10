@@ -6,6 +6,7 @@ import { Grid, Container, Typography } from '@mui/material';
 import Page from '../components/Page';
 // sections
 import { GameBoard, GameControlPanel } from '../sections/@dashboard/game';
+import { AIMODE } from '../utils/constants';
 
 // ----------------------------------------------------------------------
 
@@ -24,11 +25,11 @@ const getNewGameSettings = () => ({
   gameName: "Gomoku",
   showHistoryIdx: false,
   boardColor: "#f1b06c",
-  AIBlack: "disabled",
-  AIWhite: "disabled",
+  AIBlack: AIMODE.DISABLED,
+  AIWhite: AIMODE.DISABLED,
 });
 
-export default function GomokuGame() {
+export default function GomokuGame({ aiServer, serverState }) {
   const theme = useTheme();
   
   const [boardState, setBoardState] = useState( getEmptyBoard() );
@@ -110,6 +111,7 @@ export default function GomokuGame() {
               gameState={gameState}
               gameSettings={gameSettings}
               gameControls={gameControls}
+              serverState={serverState}
               handleUpdateSettings={handleUpdateSettings}
             />
           </Grid>

@@ -14,13 +14,13 @@ import GomokuGame from './pages/GomokuGame';
 
 // ----------------------------------------------------------------------
 
-export default function Router() {
+export default function Router({ aiServer, serverState }) {
   return useRoutes([
     {
       path: '/dashboard',
       element: <DashboardLayout />,
       children: [
-        { path: 'game', element: <GomokuGame /> },
+        { path: 'game', element: <GomokuGame aiServer={aiServer} serverState={serverState} /> },
         { path: 'app', element: <DashboardApp /> },
         { path: 'user', element: <User /> },
         { path: 'products', element: <Products /> },
