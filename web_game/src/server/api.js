@@ -1,23 +1,20 @@
 import io from 'socket.io-client';
 
-export const SERVER_STATUS = {
-	NO_CONNECTION: 'no_connection',
-	IDLE: 'idle',
-	BUSY: 'busy',
-}
+import { SERVER_STATUS } from '../utils/constants';
 
 export default class AIServer {
 	connected = false;
 
-	constructor(state, setState) {
-    this.state = state;
-		this.setState = setState;
+	constructor(updateState) {
+    this.updateState = updateState;
 		this.socket = io('http://127.0.0.1:5005/api');
 		this.trackStatus();
   }
 
 	// track socket connection status
 	trackStatus() {
+		// default
+		this.updateState('status', SERVER_STATUS.NO_CONNECTION);
 		this.socket.on("connect", () => {
 			this.connected = this.socket.connected;
 			this.checkServerStatus();
@@ -32,12 +29,5 @@ export default class AIServer {
 		this.socket.emit("get_status", (data) => {
 			this.updateState('status', data);
 		});
-	}
-
-	updateState(key, value) {
-		this.setState(state => ({
-			...state,
-			[key]: value,
-		}));
 	}
 }

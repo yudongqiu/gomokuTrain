@@ -6,16 +6,23 @@ import ThemeProvider from './theme';
 // components
 import ScrollToTop from './components/ScrollToTop';
 import { BaseOptionChartStyle } from './components/chart/BaseOptionChart';
-import AIServer, { SERVER_STATUS } from './server/api';
+import AIServer from './server/api';
 
 // ----------------------------------------------------------------------
 
 export default function App() {
-  const [serverState, setServerState] = useState({status: SERVER_STATUS.NO_CONNECTION});
+  const [serverState, setServerState] = useState({});
   const [aiServer, setAiServer] = useState(null);
 
+  const updateState = (key, value) => {
+		setServerState(serverState => ({
+			...serverState,
+			[key]: value,
+		}));
+	};
+  
   useEffect(() => {
-    const newServer = new AIServer(serverState, setServerState);
+    const newServer = new AIServer(updateState);
     setAiServer(newServer);
   }, [setAiServer]);
 
