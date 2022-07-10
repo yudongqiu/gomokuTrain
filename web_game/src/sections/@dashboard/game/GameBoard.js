@@ -152,5 +152,5 @@ function Stone({ row, col, value, onPlay, playing, historyIdx, isLastMove, isWin
     const numberColor = value === 1 ? "#eee" : "#444";
     historyNumber = <div style={{ color: numberColor, margin: "auto" }}>{historyIdx+1}</div>
   }
-  return <Box key={row*15 + col} sx={sx} onClick={onPlay}>{historyNumber}</Box>;
+  return <Box key={`stone ${row}-${col}`} sx={sx} onClick={onPlay}>{historyNumber}</Box>;
 }

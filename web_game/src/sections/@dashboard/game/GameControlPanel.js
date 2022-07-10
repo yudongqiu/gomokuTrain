@@ -13,12 +13,19 @@ import {
   Box,
   Stack,
   ToggleButton, ToggleButtonGroup,
+  Tooltip,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import UndoIcon from '@mui/icons-material/Undo';
 import CelebrationIcon from '@mui/icons-material/Celebration';
 import HistoryIcon from '@mui/icons-material/History';
 import ColorLensIcon from '@mui/icons-material/ColorLens';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb';
+import OnlinePredictionIcon from '@mui/icons-material/OnlinePrediction';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import CircleIcon from '@mui/icons-material/Circle';
+import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 // components
 // ----------------------------------------------------------------------
 
@@ -33,11 +40,11 @@ export default function GameControlPanel({ title, subheader, gameState, gameSett
       <CardHeader title={title} subheader={subheader} />
       <CardContent>
         <GameInfo gameState={gameState}/>
+        <GameControls gameControls={gameControls}/>
         <Divider />
         <AppearanceSettings gameSettings={gameSettings} handleUpdateSettings={handleUpdateSettings}/>
         <Divider />
-        <GameControls gameControls={gameControls}/>
-        
+        <AIControls gameSettings={gameSettings} handleUpdateSettings={handleUpdateSettings}/>
       </CardContent>
     </Card>
   );
@@ -116,7 +123,7 @@ export function GameControls({ gameControls }) {
   }
 
   return(
-    <Box sx={{pt: 2}}>
+    <Box sx={{pt: 2, pb: 2}}>
       <Stack spacing={2} direction="row">
         <Button onClick={handleOpenDialog} variant="outlined" size="small" endIcon={<RefreshIcon />}>
           Restart
@@ -154,5 +161,64 @@ export function ResetDialog({ open, handleClose, onConfirm }) {
         </Button>
       </DialogActions>
     </Dialog>
+  );
+}
+
+export function AIControls({ gameSettings, handleUpdateSettings }) {
+  const handleToggleSetting = (fieldName) => {
+    const currentValue = gameSettings[fieldName];
+    handleUpdateSettings(fieldName, !currentValue);
+  };
+  return (
+    <List
+      sx={{ width: '100%', maxWidth: 360 }}
+      subheader={<ListSubheader sx={{pl: 0}}>AI</ListSubheader>}
+      dense
+    >
+      <ListItem disableGutters>
+        <ListItemIcon sx={{ minWidth:30 }}>
+          <CircleIcon />
+        </ListItemIcon>
+        <ListItemText primary="Black" />
+        <ToggleButtonGroup
+          exclusive
+          value={gameSettings.AIBlack}
+          onChange={(_, value) => handleUpdateSettings("AIBlack", value)}
+          size="small"
+        >
+          <Tooltip title="Disabled" value="disabled">
+            <ToggleButton value="disabled"><DoNotDisturbIcon /></ToggleButton>
+          </Tooltip>
+          <Tooltip title="Enable Prediction" value="predict">
+            <ToggleButton value="predict" color="info"><OnlinePredictionIcon /></ToggleButton>
+          </Tooltip>
+          <Tooltip title="Enable Autoplay" value="play">
+            <ToggleButton value="play" color="success"><PlayArrowIcon /></ToggleButton>
+          </Tooltip>
+        </ToggleButtonGroup>
+      </ListItem>
+      <ListItem disableGutters>
+        <ListItemIcon sx={{ minWidth:30 }}>
+          <CircleOutlinedIcon />
+        </ListItemIcon>
+        <ListItemText primary="White" />
+        <ToggleButtonGroup
+          exclusive
+          value={gameSettings.AIWhite}
+          onChange={(_, value) => handleUpdateSettings("AIWhite", value)}
+          size="small"
+        >
+          <Tooltip title="Disabled" value="disabled">
+            <ToggleButton value="disabled"><DoNotDisturbIcon /></ToggleButton>
+          </Tooltip>
+          <Tooltip title="Enable Prediction" value="predict">
+            <ToggleButton value="predict" color="info"><OnlinePredictionIcon /></ToggleButton>
+          </Tooltip>
+          <Tooltip title="Enable Autoplay" value="play">
+            <ToggleButton value="play" color="success"><PlayArrowIcon /></ToggleButton>
+          </Tooltip>
+        </ToggleButtonGroup>
+      </ListItem>
+    </List>
   );
 }

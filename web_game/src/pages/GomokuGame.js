@@ -24,6 +24,8 @@ const getNewGameSettings = () => ({
   gameName: "Gomoku",
   showHistoryIdx: false,
   boardColor: "#f1b06c",
+  AIBlack: "disabled",
+  AIWhite: "disabled",
 });
 
 export default function GomokuGame() {
