@@ -41,9 +41,63 @@ class AIPlayer:
         """ Reset cache before using new model """
         self.cache = LeveledCache(maxlevel=self.level, maxsize=2000000)
 
-    def predict(self, game_state):
-        time.sleep(2)
-        return [[0,0,1.0]]
+
+    def predict(self, web_game_state):
+        """
+        Run AI prediction for all interested moves, return structured prediction data to web frontend
+        """
+        server_game_state = self.server_game_state(web_game_state)
+        # prepare inputs
+        state = server_game_state['state']
+        show_state(state)
+        player = server_game_state['player']
+        empty_spots_left = server_game_state['empty_spots_left']
+        # calculate interested moves
+        n_moves = 40
+        self.move_interest_values.fill(0) # reuse the same array to save init cost
+        self.move_interest_values[4:11, 4:11] = 5.0 # manually assign higher interest in middle
+        interested_moves = find_interesting_moves(state, empty_spots_left, self.move_interest_values, player, n_moves, False)
+        # predict winrate using model
+        moveWinrates = []
+        wrs = self.dnn_evaluate(state, interested_moves, player)
+        for move, winrate in zip(interested_moves, wrs):
+            # convert winrate from range (-1, 1) to (0, 1)
+            moveWinrates.append([int(move[0]), int(move[1]), float(winrate*0.5+0.5)])
+        moveWinrates.sort(key=lambda l:l[2], reverse=True)
+        # prepare return data that is json serielizable
+        prediction = {
+            "playing": web_game_state['playing'],
+            "moveWinrates": moveWinrates,
+        }
+        return prediction
+
+    def server_game_state(self, web_game_state):
+        """
+        prepare server game state for AI processing
+        
+        notes:
+        1 is black and 2 is white on web
+        1 is black and -1 is white on server
+
+        example input:
+        web_game_state = {'playing': 2, 'winner': 0, 'moveHistory': [[8, 7, 1], [8, 8, 2], [7, 9, 1], [8, 10, 2], [6, 10, 1]], 'winningMoves': []}
+        """
+        WEB_TO_SERVER_PLAYER = {1: 1, 2: -1}
+        
+        state = np.zeros(board_size**2, dtype=np.int8).reshape(board_size, board_size)
+        for move in web_game_state['moveHistory']:
+            r, c, web_player = move
+            player = WEB_TO_SERVER_PLAYER[web_player]
+            state[r,c] = player
+
+        player = WEB_TO_SERVER_PLAYER[web_game_state['playing']]
+        empty_spots_left = board_size**2 - len(web_game_state['moveHistory'])
+        server_game_state = {
+            "state": state,
+            "player": player,
+            "empty_spots_left": empty_spots_left
+        }
+        return server_game_state
 
     def strategy(self, board_state, starting_level=0):
         """ AI's strategy 

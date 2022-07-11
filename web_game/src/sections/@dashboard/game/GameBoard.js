@@ -32,18 +32,18 @@ export default function GameBoard({ title, subheader, boardState, gameState, gam
     for (let i = 0; i < 15; i += 1) {
       for (let j = 0; j < 15; j += 1) {
         if (boardState[i][j] === 0) {
-          newIntersections.push(Stone({
+          newIntersections.push(Intersection({
             row: i,
             col: j,
-            value: boardState[i][j],
             onPlay: () => handlePlayStone(i,j),
             playing: gameState.playing,
+            winRate: gameState.aIWinRates[i*15+j]
           }));
         }
       }    
     }
     setIntersections(newIntersections);
-  }, [title, subheader, boardState, gameState]); // cache key is needed to prevent infinite loop. Only run the effect once.
+  }, [boardState, gameState]); // cache key is needed to prevent infinite loop. Only run the effect once.
   
   /* below is the simple version without performance optimization
   const intersections = [];
@@ -113,7 +113,7 @@ export default function GameBoard({ title, subheader, boardState, gameState, gam
   );
 }
 
-function Stone({ row, col, value, onPlay, playing, historyIdx, isLastMove, isWinningLine }) {
+function Stone({ row, col, value, historyIdx, isLastMove, isWinningLine }) {
   const sx = {
     top: PADDING - GRID_SIZE/2 + row * GRID_SIZE+2,
     left: PADDING - GRID_SIZE/2 + col * GRID_SIZE+2,
@@ -142,15 +142,41 @@ function Stone({ row, col, value, onPlay, playing, historyIdx, isLastMove, isWin
   } else if (value === 2) {
     sx.backgroundColor = "#eee";
     sx.boxShadow = boxShadow;
-  } else if (playing) {
-    sx['&:hover'] = {
-      backgroundColor: playing === 1 ? "rgba(100, 100, 100, 0.4)" : "rgba(250, 250, 250, 0.5)"
-    };
   }
   let historyNumber;
   if (historyIdx !== undefined) {
     const numberColor = value === 1 ? "#eee" : "#444";
     historyNumber = <div style={{ color: numberColor, margin: "auto" }}>{historyIdx+1}</div>
   }
-  return <Box key={`stone ${row}-${col}`} sx={sx} onClick={onPlay}>{historyNumber}</Box>;
+  return <Box key={`stone ${row}-${col}`} sx={sx}>{historyNumber}</Box>;
+}
+
+function Intersection({ row, col, onPlay, playing, winRate }) {
+  const sx = {
+    top: PADDING - GRID_SIZE/2 + row * GRID_SIZE+2,
+    left: PADDING - GRID_SIZE/2 + col * GRID_SIZE+2,
+    width: GRID_SIZE - 4,
+    height: GRID_SIZE - 4,
+    borderRadius: "50%",
+    position: "absolute",
+    boxSizing: "border-box",
+    zIndex: 2,
+    transition: "0.1s",
+    display: "flex",
+    userSelect: "none",
+  };
+  if (playing) {
+    sx['&:hover'] = {
+      backgroundColor: playing === 1 ? "rgba(100, 100, 100, 0.4)" : "rgba(250, 250, 250, 0.5)"
+    };
+  }
+  let winRateLable;
+  if (winRate !== undefined) {
+    // show as "50%"
+    const winRatePercentage = `${parseFloat(winRate*100).toFixed(0)}%`;
+    winRateLable = <div style={{ fontSize: "13px", color: "#777", margin: "auto" }}>{winRatePercentage}</div>
+    // set box shadow color from red to green
+    sx.boxShadow = `2px 2px 4px 2px rgba(${255-winRate*255}, ${winRate*255}, 50, 0.25), -2px -2px 4px 0 rgba(${255-winRate*255}, ${winRate*255}, 250, 0.25)`;
+  }
+  return <Box key={`intersection ${row}-${col}`} sx={sx} onClick={onPlay}>{winRateLable}</Box>;
 }

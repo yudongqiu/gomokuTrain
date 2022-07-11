@@ -4,6 +4,7 @@ from functools import wraps
 from server.server_namespace import server_ns
 from server.constants import ServerStatus
 from gomoku_ai.ai_player import AIPlayer
+from gomoku_ai.dnn_model import load_existing_model
 
 THIS_FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
 DATA_ROOT_PATH = os.path.realpath(os.path.join(THIS_FOLDER_PATH, '../server_data'))
@@ -30,7 +31,16 @@ class ServerManager:
             os.makedirs(self.root)
 
         self.status = ServerStatus.IDLE
-        self.ai_player = AIPlayer("AI", 1)
+        # AI
+        self.ai_player = self.load_dnn_model_player()
+        # queue for predictions
+        self.prediction_queue = []
+
+    def load_dnn_model_player(self):
+        model_file_path = os.path.join(self.root, 'dnn_model.pt')
+        dnn_model = load_existing_model(model_file_path)
+        print("Load dnn model successfully from ", model_file_path)
+        return AIPlayer("AI", model=dnn_model, level=1)
 
     def getStatus(self):
         return self.status.value
@@ -39,10 +49,17 @@ class ServerManager:
         self.status = status
         # post status to client
         server_ns.post_status(status.value)
+    
+    def queue_prediction(self, game_state):
+        self.prediction_queue.append(game_state)
 
     @busy
-    def getPrediction(self, game_state, callback):
-        return callback(self.ai_player.predict(game_state))
+    def process_prediction(self):
+        if len(self.prediction_queue) == 0:
+            print("process prediction called without any game_state in the queue")
+            return {}
+        game_state = self.prediction_queue.pop()
+        return self.ai_player.predict(game_state)
 
 
 

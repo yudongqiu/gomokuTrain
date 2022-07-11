@@ -19,6 +19,7 @@ const getNewGameState = () => ({
   winner: 0,
   moveHistory: [],
   winningMoves: [],
+  aIWinRates: {}, // e.g. {6x15+7: 1.0}
 });
 // settings that does not need reset every game
 const getNewGameSettings = () => ({
@@ -44,18 +45,27 @@ export default function GomokuGame({ aiServer, serverState }) {
     // check winner, switch player if no winner
     const winningMoves = checkWinningMoves(boardState, [i,j], gameState.playing);
     const nextPlaying = winningMoves.length > 0 ? 0 : 3 - gameState.playing;
-    setGameState(gameState => ({
+    const nextGameState = {
       ...gameState,
       winner: winningMoves.length > 0 ? gameState.playing: 0,
       playing: nextPlaying,
       winningMoves,
       moveHistory: [...gameState.moveHistory, [i,j,gameState.playing]],
-    }));
+      prediction: {},
+    };
+    setGameState(nextGameState);
     // AI: get predictions from server
     if (aiServer && serverState.status === SERVER_STATUS.IDLE) {
-      if (gameSettings.AIBlack === AIMODE.PREDICT && nextPlaying === 1) {
-        aiServer.socket.emit("getPrediction", gameState);
-        console.log('emit getPrediction');
+      const blackPredictionEnabled = gameSettings.AIBlack !== AIMODE.DISABLED && nextPlaying === 1;
+      const whitePredictionEnabled = gameSettings.AIWhite !== AIMODE.DISABLED && nextPlaying === 2;
+      if (blackPredictionEnabled || whitePredictionEnabled) {
+        aiServer.socket.emit("queuePrediction", nextGameState, (data) => {
+          if (data === 'success') {
+            aiServer.socket.emit("processPrediction");
+            console.log('emit processPrediction success');
+          }
+        });
+        console.log('emit queuePrediction success');
       }
     };
   };
@@ -65,10 +75,13 @@ export default function GomokuGame({ aiServer, serverState }) {
       const predictionListener = (prediction) => {
         console.log('got prediction: ', prediction);
         // prediction for black player
-        if (prediction.playing === 1 && gameState.playing === 1 && gameState.AIBlack !== AIMODE.DISABLED) {          
+        const blackPredictionEnabled = prediction.playing === 1 &&  gameSettings.AIBlack !== AIMODE.DISABLED;
+        const whitePredictionEnabled = prediction.playing === 2 &&  gameSettings.AIWhite !== AIMODE.DISABLED;
+        if (blackPredictionEnabled || whitePredictionEnabled) {          
+          const aIWinRates = buildAiWinRates(prediction.moveWinrates)
           setGameState(gameState => ({
             ...gameState,
-            prediction,
+            aIWinRates,
           }));
         }
       }
@@ -78,7 +91,7 @@ export default function GomokuGame({ aiServer, serverState }) {
         aiServer.socket.off("prediction", predictionListener);
       }
     }
-  }, [aiServer])
+  }, [gameSettings, aiServer])
 
   const handleUpdateSettings = (key, value) => {
     setGameSettings(gameSettings => ({
@@ -107,6 +120,7 @@ export default function GomokuGame({ aiServer, serverState }) {
       winner: 0,
       moveHistory: moveHistory.slice(0, -1),
       winningMoves: [],
+      prediction: {},
     }));
   }
 
@@ -197,4 +211,12 @@ function checkWinningMoves(boardState, lastMove, playing) {
     }
   };
   return [];
+}
+
+function buildAiWinRates(moveWinRates) {
+  const aIWinRates = {};
+  moveWinRates.forEach(([i,j,winrate]) => {
+    aIWinRates[i*15+j] = winrate;
+  });
+  return aIWinRates;
 }

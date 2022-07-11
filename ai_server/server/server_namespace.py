@@ -11,14 +11,17 @@ class ServerNameSpace(Namespace):
     def post_status(self, data):
         self.emit('status', data)
 
-    def on_getPrediction(self, game_state):
-        print("getPrediction", game_state)
-        self._manager.getPrediction(game_state, self.post_prediction)
+    def on_queuePrediction(self, game_state):
+        print("got event queuePrediction: ", game_state)
+        self._manager.queue_prediction(game_state)
+        print("queue prediction successful")
         return "success"
 
-    def post_prediction(self, data):
-        print("post prediction", data)
-        self.emit("prediction", data)
+    def on_processPrediction(self):
+        print("got event processPrediction")
+        prediction_result = self._manager.process_prediction()
+        print("prediction result finished: ", prediction_result)
+        self.emit("prediction", prediction_result)
 
 
 server_ns = ServerNameSpace('/api')
