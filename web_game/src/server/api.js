@@ -23,6 +23,9 @@ export default class AIServer {
 			this.connected = this.socket.connected;
 			this.updateState('status', SERVER_STATUS.NO_CONNECTION);
 		});
+    this.socket.on("status", (data) => {
+      this.updateState('status', data);
+    });
 	}
 
 	checkServerStatus() {

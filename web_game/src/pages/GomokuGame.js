@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 // @mui
 import { useTheme } from '@mui/material/styles';
 import { Grid, Container, Typography } from '@mui/material';
@@ -6,7 +6,7 @@ import { Grid, Container, Typography } from '@mui/material';
 import Page from '../components/Page';
 // sections
 import { GameBoard, GameControlPanel } from '../sections/@dashboard/game';
-import { AIMODE } from '../utils/constants';
+import { AIMODE, SERVER_STATUS } from '../utils/constants';
 
 // ----------------------------------------------------------------------
 
@@ -43,14 +43,42 @@ export default function GomokuGame({ aiServer, serverState }) {
     setBoardState(newboardState);
     // check winner, switch player if no winner
     const winningMoves = checkWinningMoves(boardState, [i,j], gameState.playing);
+    const nextPlaying = winningMoves.length > 0 ? 0 : 3 - gameState.playing;
     setGameState(gameState => ({
       ...gameState,
       winner: winningMoves.length > 0 ? gameState.playing: 0,
-      playing: winningMoves.length > 0 ? 0 : 3 - gameState.playing,
+      playing: nextPlaying,
       winningMoves,
       moveHistory: [...gameState.moveHistory, [i,j,gameState.playing]],
     }));
+    // AI: get predictions from server
+    if (aiServer && serverState.status === SERVER_STATUS.IDLE) {
+      if (gameSettings.AIBlack === AIMODE.PREDICT && nextPlaying === 1) {
+        aiServer.socket.emit("getPrediction", gameState);
+        console.log('emit getPrediction');
+      }
+    };
   };
+
+  useEffect(() => {
+    if (aiServer) {
+      const predictionListener = (prediction) => {
+        console.log('got prediction: ', prediction);
+        // prediction for black player
+        if (prediction.playing === 1 && gameState.playing === 1 && gameState.AIBlack !== AIMODE.DISABLED) {          
+          setGameState(gameState => ({
+            ...gameState,
+            prediction,
+          }));
+        }
+      }
+      aiServer.socket.on("prediction", predictionListener);
+  
+      return () => {
+        aiServer.socket.off("prediction", predictionListener);
+      }
+    }
+  }, [aiServer])
 
   const handleUpdateSettings = (key, value) => {
     setGameSettings(gameSettings => ({
