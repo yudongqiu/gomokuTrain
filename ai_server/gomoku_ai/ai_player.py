@@ -11,7 +11,7 @@ class AIPlayer:
     def __init__(self, name, model=None, level=0):
         self.name = name
         self.load_model(model)
-        self.level = level
+        self.level = level # level 0 means direct check all my moves against dnn model and pick the highest score
         self.learndata = dict()
         self.opponent = None
         self.all_interest_states = np.zeros(board_size**4 * 3, dtype=np.float32).reshape(board_size**2, 3, board_size, board_size)
@@ -39,7 +39,7 @@ class AIPlayer:
 
     def reset_cache(self):
         """ Reset cache before using new model """
-        self.cache = LeveledCache(maxlevel=self.level, maxsize=2000000)
+        self.cache = LeveledCache(maxsize=2000000)
 
 
     def predict(self, web_game_state):
@@ -57,19 +57,59 @@ class AIPlayer:
         self.move_interest_values.fill(0) # reuse the same array to save init cost
         self.move_interest_values[4:11, 4:11] = 5.0 # manually assign higher interest in middle
         interested_moves = find_interesting_moves(state, empty_spots_left, self.move_interest_values, player, n_moves, False)
-        # predict winrate using model
+        # predict winrate
         moveWinrates = []
-        wrs = self.dnn_evaluate(state, interested_moves, player)
-        for move, winrate in zip(interested_moves, wrs):
-            # convert winrate from range (-1, 1) to (0, 1)
+        for move in interested_moves:
+            winrate = self.single_move_winrate(state, empty_spots_left, move, player, self.level-1)
             moveWinrates.append([int(move[0]), int(move[1]), float(winrate*0.5+0.5)])
-        moveWinrates.sort(key=lambda l:l[2], reverse=True)
+
+
+        # winrates = self.dnn_evaluate(state, interested_moves, player)
+        # for move, winrate in zip(interested_moves, wrs):
+        #     # convert winrate from range (-1, 1) to (0, 1)
+        #     moveWinrates.append([int(move[0]), int(move[1]), float(winrate*0.5+0.5)])
+        moveWinrates.sort(key=lambda l:l[-1], reverse=True)
+        # filter out the zero winrate moves, but keep first 5 even if they're close to zero
+        # moveWinrates = [m for i,m in enumerate(moveWinrates) if i < 5 or m[-1] > 0.01]
         # prepare return data that is json serielizable
         prediction = {
             "playing": web_game_state['playing'],
             "moveWinrates": moveWinrates,
         }
         return prediction
+
+    def single_move_winrate(self, state, empty_spots_left, current_move, player, level):
+        # put the stone down
+        state[current_move[0], current_move[1]] = player
+        # check game ending conditions
+        # 1. i win (highest priority)
+        if i_win(state, current_move, player):
+            # recover state
+            state[current_move[0], current_move[1]] = 0
+            return 1.0
+        # 2. I lost, acccurate only if I don't win
+        elif i_lost(state, player):
+            # recover state
+            state[current_move[0], current_move[1]] = 0
+            return -1.0
+        # 3. I will win next round, only if I don't lose this round
+        elif i_will_win(state, current_move, player):
+            # recover state
+            state[current_move[0], current_move[1]] = 0
+            return 1.0
+        # check cache
+        this_state_id = state.tobytes()
+        q = self.cache.get(this_state_id, level)
+        if q is not None:
+            # recover state
+            state[current_move[0], current_move[1]] = 0
+            return q
+        # known moves were handled already, here we evaluate opponents winrate
+        opponent_best_move, opponent_best_q = self.best_action_q(state, empty_spots_left-1, -2.0, 2.0, -player, level)
+        # recover state
+        state[current_move[0], current_move[1]] = 0
+        # my winrate is opposite of opponents
+        return -opponent_best_q
 
     def server_game_state(self, web_game_state):
         """
@@ -99,44 +139,8 @@ class AIPlayer:
         }
         return server_game_state
 
-    def strategy(self, board_state, starting_level=0):
-        """ AI's strategy 
-        Information provided to you:
-        board_state = (board, last_move, playing, board_size)
-        board = (x_stones, o_stones)
-        stones is a set contains positions of one player's stones. e.g.
-            x_stones = {(8,8), (8,9), (8,10), (8,11)}
-        playing = 0|1, the current player's index
 
-        Your strategy will return a position code for the next stone, e.g. (8,7)
-        """
-        # load input board_state
-        board, last_move, playing, board_size = board_state
-        self.playing_white = bool(playing)
-        # build new state representation
-        state = np.zeros(board_size**2, dtype=np.int8).reshape(board_size, board_size)
-        # put black stones, update index
-        for br, bc in board[0]:
-            state[br-1,bc-1] = 1
-        # put white stones, update index
-        for wr, wc in board[1]:
-            state[wr-1,wc-1] = -1
-        # update index 1 -> 0 for last_move
-        last_move = (last_move[0]-1, last_move[1]-1)
-        # prepare input for best_action_q
-        alpha = -2.0
-        beta = 2.0
-        empty_spots_left = board_size**2 - len(board[0]) - len(board[1])
-        # predict next best action and q
-        player = -1 if self.playing_white else 1
-        # TODO: remove .copy()
-        best_move, best_q = self.best_action_q(state.copy(), empty_spots_left, alpha, beta, player, level=starting_level)
-        # save the winrate and the state
-        self.update_if_game_finish(state, best_move, best_q, player)
-        # return the best move
-        return (best_move[0]+1, best_move[1]+1), best_q
-
-    def best_action_q(self, state, empty_spots_left, alpha, beta, player, level=0):
+    def best_action_q(self, state, empty_spots_left, alpha, beta, player, level):
         """ 
         Get the optimal action for a state and the predicted win rate for player
 
@@ -182,7 +186,7 @@ class AIPlayer:
         best_move, max_q, unknown_moves, unknown_move_ids = self.check_known(state, interested_moves, player, level)
         if len(unknown_moves) > 0:
             # for unknown moves, if level has reached, evaluate with DNN model
-            if level >= self.level:
+            if level <= 0:
                 dnn_q_array = self.dnn_evaluate(state, unknown_moves, player)
                 # store the values in cache
                 for move_id, dnn_q in zip(unknown_move_ids, dnn_q_array):
@@ -197,9 +201,9 @@ class AIPlayer:
             else:
                 # if level has not reached yet, go deeper to the next level
                 for move, move_id in zip(unknown_moves, unknown_move_ids):
-                    q = self.next_iter_winrate(state, empty_spots_left, move, alpha, beta, player, level+1)
+                    q = self.next_iter_winrate(state, empty_spots_left, move, alpha, beta, player, level-1)
                     # store the result in cache
-                    self.cache.set(move_id, q, level+1)
+                    self.cache.set(move_id, q, level-1)
                     if q > max_q:
                         max_q = q
                         best_move = move
@@ -211,11 +215,11 @@ class AIPlayer:
     def next_iter_winrate(self, state, empty_spots_left, current_move, alpha, beta, player, level):
         """Execute the step of the player, then return the winrate by computing next step"""
         # update the stone down
-        state[current_move] = player
+        state[current_move[0], current_move[1]] = player
         # known moves were handled already, here we evaluate opponents winrate
         opponent_best_move, opponent_best_q = self.best_action_q(state, empty_spots_left-1, alpha, beta, -player, level)
         # recover state
-        state[current_move] = 0
+        state[current_move[0], current_move[1]] = 0
         # my winrate is opposite of opponents
         return -opponent_best_q
 
@@ -238,26 +242,27 @@ class AIPlayer:
             assert state[this_move] == 0 # interest move should be empty here
             # put down this move
             state[this_move] = player
-            # check game ending conditions
-            # 1. i win (highest priority)
-            if i_win(state, this_move, player):
+            # check if this state is cached
+            this_state_id = state.tobytes()
+            q = self.cache.get(this_state_id, level)
+            if q is not None:
                 best_move = this_move
-                max_q = 1.0
-            # 2. I lost, acccurate only if I don't win
-            elif i_lost(state, player):
-                best_move = this_move
-                max_q = -1.0
-            # 3. I will win next round, only if I don't lose this round
-            elif i_will_win(state, this_move, player):
-                best_move = this_move
-                max_q = 1.0
+                max_q = q
             else:
-                # check if this state is cached
-                this_state_id = state.tobytes()
-                q = self.cache.get(this_state_id, level)
-                if q is not None:
+                if i_win(state, this_move, player):
                     best_move = this_move
-                    max_q = q
+                    max_q = 1.0
+                    self.cache.set(this_state_id, max_q, level)
+                # 2. I lost, acccurate only if I don't win
+                elif i_lost(state, player):
+                    best_move = this_move
+                    max_q = -1.0
+                    self.cache.set(this_state_id, max_q, level)
+                # 3. I will win next round, only if I don't lose this round
+                elif i_will_win(state, this_move, player):
+                    best_move = this_move
+                    max_q = 1.0
+                    self.cache.set(this_state_id, max_q, level)
                 else:
                     # q is not known for this move
                     unknown_moves.append(this_move)
@@ -688,24 +693,23 @@ class LRU(OrderedDict):
 
 class LeveledCache:
     """
-    Cache with level system, level 0 has highest priority
+    Cache with level system, level 0 has lowest quality, maxlevel has highest quality thus takes priority
     When maxsize reached, oldest key from lowest cache will be deleted
     """
 
-    def __init__(self, maxlevel, maxsize=128):
-        assert maxlevel >= 0
-        self.maxlevel = maxlevel
+    def __init__(self, maxsize=128):
+        self.maxlevel = 0 # dynamically adjusted based on set
         self.maxsize = maxsize
-        self.caches = [OrderedDict() for _ in range(maxlevel+1)]
+        self.caches = [OrderedDict() for _ in range(self.maxlevel+1)]
         self.size = 0
     
-    def get(self, key, max_accepted_level):
+    def get(self, key, min_accepted_level):
         """
         Go over each level in cache, find one value with key
         If none found, return None
         """
-        for level in range(min(self.maxlevel, max_accepted_level)+1):
-            # starting from level 0, look for cached value
+        for level in range(self.maxlevel, max(min_accepted_level,0)-1, -1):
+            # starting from higest level, look for cached value
             cache = self.caches[level]
             try:
                 result = cache[key]
@@ -719,10 +723,14 @@ class LeveledCache:
         """
         set a value in cache with level
         """
-        assert level <= self.maxlevel
+        if level > self.maxlevel:
+            # increase max level dynamically
+            n_new_levels = level - self.maxlevel
+            self.caches += [OrderedDict() for _ in range(n_new_levels)]
+            self.maxlevel = level
         # delete oldest from lowest cache if size reached
         if self.size >= self.maxsize:
-            for l in range(self.maxlevel, -1, -1):
+            for l in range(self.maxlevel):
                 cache = self.caches[l]
                 try:
                     oldest = next(iter(cache))
