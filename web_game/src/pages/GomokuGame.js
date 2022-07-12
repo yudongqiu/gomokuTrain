@@ -36,9 +36,13 @@ export default function GomokuGame({ aiServer, serverState }) {
   const [boardState, setBoardState] = useState( getEmptyBoard() );
   const [gameState, setGameState] = useState( getNewGameState() );
   const [gameSettings, setGameSettings] = useState( getNewGameSettings() );
+  const [undoHistory] = useState([]);
 
   const handlePlayStone = (i, j) => {
     if (boardState[i][j] !== 0 || gameState.winner) return;
+    // append states into undo history
+    undoHistory.push(JSON.stringify([gameState, boardState]));
+    // update board state
     const newboardState = [...boardState];
     newboardState[i][j] = gameState.playing;
     setBoardState(newboardState);
@@ -51,15 +55,32 @@ export default function GomokuGame({ aiServer, serverState }) {
       playing: nextPlaying,
       winningMoves,
       moveHistory: [...gameState.moveHistory, [i,j,gameState.playing]],
-      prediction: {},
+      aIWinRates: {},
     };
     setGameState(nextGameState);
-    // AI: get predictions from server
-    if (aiServer && serverState.status === SERVER_STATUS.IDLE) {
-      const blackPredictionEnabled = gameSettings.AIBlack !== AIMODE.DISABLED && nextPlaying === 1;
-      const whitePredictionEnabled = gameSettings.AIWhite !== AIMODE.DISABLED && nextPlaying === 2;
+    // // AI: get predictions from server
+    // if (aiServer && serverState.status === SERVER_STATUS.IDLE) {
+    //   const blackPredictionEnabled = gameSettings.AIBlack !== AIMODE.DISABLED && nextPlaying === 1;
+    //   const whitePredictionEnabled = gameSettings.AIWhite !== AIMODE.DISABLED && nextPlaying === 2;
+    //   if (blackPredictionEnabled || whitePredictionEnabled) {
+    //     aiServer.socket.emit("queuePrediction", nextGameState, (data) => {
+    //       if (data === 'success') {
+    //         aiServer.socket.emit("processPrediction");
+    //         console.log('emit processPrediction success');
+    //       }
+    //     });
+    //     console.log('emit queuePrediction success');
+    //   }
+    // };
+  };
+
+  // emit event for predictions
+  useEffect(() => {
+    if (aiServer && serverState.status === SERVER_STATUS.IDLE && Object.keys(gameState.aIWinRates).length === 0) {
+      const blackPredictionEnabled = gameSettings.AIBlack !== AIMODE.DISABLED && gameState.playing === 1;
+      const whitePredictionEnabled = gameSettings.AIWhite !== AIMODE.DISABLED && gameState.playing === 2;
       if (blackPredictionEnabled || whitePredictionEnabled) {
-        aiServer.socket.emit("queuePrediction", nextGameState, (data) => {
+        aiServer.socket.emit("queuePrediction", gameState, (data) => {
           if (data === 'success') {
             aiServer.socket.emit("processPrediction");
             console.log('emit processPrediction success');
@@ -68,7 +89,7 @@ export default function GomokuGame({ aiServer, serverState }) {
         console.log('emit queuePrediction success');
       }
     };
-  };
+  }, [gameSettings.AIBlack, gameSettings.AIWhite, gameState]);
 
   useEffect(() => {
     if (aiServer) {
@@ -106,22 +127,10 @@ export default function GomokuGame({ aiServer, serverState }) {
   }
   
   const undoLastMove = () => {
-    const moveHistory = gameState.moveHistory;
-    const lastMove = moveHistory && moveHistory[moveHistory.length-1];
-    // update board state to remove last move
-    const [i, j, playing] = lastMove;
-    const newboardState = [...boardState];
-    newboardState[i][j] = 0;
-    setBoardState(newboardState);
-    // update game state, reset winner if exist
-    setGameState(gameState => ({
-      ...gameState,
-      playing,
-      winner: 0,
-      moveHistory: moveHistory.slice(0, -1),
-      winningMoves: [],
-      prediction: {},
-    }));
+    if (undoHistory.length === 0) return;
+    const [lastGameState, lastBoardState] = JSON.parse(undoHistory.pop());
+    setBoardState(lastBoardState);
+    setGameState(lastGameState);
   }
 
   const gameControls = {
