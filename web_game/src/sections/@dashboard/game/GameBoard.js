@@ -174,9 +174,10 @@ function Intersection({ row, col, onPlay, playing, winRate }) {
   if (winRate !== undefined) {
     // show as "50%"
     const winRatePercentage = `${parseFloat(winRate*100).toFixed(0)}%`;
-    winRateLable = <div style={{ fontSize: "13px", color: "#777", margin: "auto" }}>{winRatePercentage}</div>
+    winRateLable = <div style={{ fontSize: "13px", color: `rgba(0,0,0,${0.2+winRate*0.3})`, margin: "auto" }}>{winRatePercentage}</div>
+    sx.backgroundColor = `rgba(100, ${winRate*255}, 100, ${0.02+winRate*0.3})`;
     // set box shadow color from red to green
-    sx.boxShadow = `2px 2px 4px 2px rgba(${255-winRate*255}, ${winRate*255}, 50, 0.25), -2px -2px 4px 0 rgba(${255-winRate*255}, ${winRate*255}, 250, 0.25)`;
+    sx.boxShadow = `2px 2px 4px 2px rgba(100, ${winRate*255}, 50, ${0.05+winRate*0.3}), -2px -2px 4px 0 rgba(100, ${winRate*255}, 250, ${0.05+winRate*0.3})`;
   }
   return <Box key={`intersection ${row}-${col}`} sx={sx} onClick={onPlay}>{winRateLable}</Box>;
 }

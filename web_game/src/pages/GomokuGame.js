@@ -100,10 +100,12 @@ export default function GomokuGame({ aiServer, serverState }) {
         const whitePredictionEnabled = prediction.playing === 2 &&  gameSettings.AIWhite !== AIMODE.DISABLED;
         if (blackPredictionEnabled || whitePredictionEnabled) {          
           const aIWinRates = buildAiWinRates(prediction.moveWinrates)
-          setGameState(gameState => ({
-            ...gameState,
-            aIWinRates,
-          }));
+          if (Object.keys(aIWinRates).length > 0) {
+            setGameState(gameState => ({
+              ...gameState,
+              aIWinRates,
+            }));
+          }
         }
       }
       aiServer.socket.on("prediction", predictionListener);
