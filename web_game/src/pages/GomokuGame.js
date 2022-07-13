@@ -28,6 +28,7 @@ const getNewGameSettings = () => ({
   boardColor: "#f1b06c",
   AIBlack: AIMODE.DISABLED,
   AIWhite: AIMODE.DISABLED,
+  AILevel: 1,
 });
 
 export default function GomokuGame({ aiServer, serverState }) {
@@ -80,7 +81,9 @@ export default function GomokuGame({ aiServer, serverState }) {
       const blackPredictionEnabled = gameSettings.AIBlack !== AIMODE.DISABLED && gameState.playing === 1;
       const whitePredictionEnabled = gameSettings.AIWhite !== AIMODE.DISABLED && gameState.playing === 2;
       if (blackPredictionEnabled || whitePredictionEnabled) {
-        aiServer.socket.emit("queuePrediction", gameState, (data) => {
+        // append aiLevel to request
+        const webGameState = {...gameState, aiLevel: gameSettings.AILevel};
+        aiServer.socket.emit("queuePrediction", webGameState, (data) => {
           if (data === 'success') {
             aiServer.socket.emit("processPrediction");
             console.log('emit processPrediction success');

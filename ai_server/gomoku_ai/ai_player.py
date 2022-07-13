@@ -51,6 +51,7 @@ class AIPlayer:
         self.level = web_game_state.get('aiLevel', 1)
         # prepare inputs
         state = server_game_state['state']
+        print(f"Starting prediction with level = {self.level}")
         show_state(state)
         player = server_game_state['player']
         empty_spots_left = server_game_state['empty_spots_left']

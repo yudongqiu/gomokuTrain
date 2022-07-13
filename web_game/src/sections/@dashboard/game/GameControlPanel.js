@@ -14,6 +14,7 @@ import {
   Stack,
   ToggleButton, ToggleButtonGroup,
   Tooltip,
+  Select, MenuItem,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import UndoIcon from '@mui/icons-material/Undo';
@@ -26,6 +27,7 @@ import OnlinePredictionIcon from '@mui/icons-material/OnlinePrediction';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CircleIcon from '@mui/icons-material/Circle';
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
+import EscalatorIcon from '@mui/icons-material/Escalator';
 // components
 import { AIMODE, SERVER_STATUS } from '../../../utils/constants';
 // ----------------------------------------------------------------------
@@ -230,6 +232,22 @@ export function AIControls({ serverState, gameSettings, handleUpdateSettings }) 
             <ToggleButton value={AIMODE.AUTOPLAY} color="success"><PlayArrowIcon /></ToggleButton>
           </Tooltip>
         </ToggleButtonGroup>
+      </ListItem>
+      <ListItem disableGutters>
+        <ListItemIcon sx={{ minWidth:30 }}>
+          <EscalatorIcon />
+        </ListItemIcon>
+        <ListItemText primary="AI Level" />
+        <FormControl size="small">
+          <Select
+            value={gameSettings.AILevel}
+            onChange={(event) => handleUpdateSettings("AILevel", event.target.value)}
+          >
+            <MenuItem value={1}>1</MenuItem>
+            <MenuItem value={2}>2</MenuItem>
+            <MenuItem value={3}>3</MenuItem>
+          </Select>
+        </FormControl>
       </ListItem>
     </List>
   );
