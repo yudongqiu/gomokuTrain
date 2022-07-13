@@ -40,7 +40,7 @@ class ServerManager:
         model_file_path = os.path.join(self.root, 'dnn_model.pt')
         dnn_model = load_existing_model(model_file_path)
         print("Load dnn model successfully from ", model_file_path)
-        return AIPlayer("AI", model=dnn_model, level=2)
+        return AIPlayer("AI", model=dnn_model, level=1)
 
     def getStatus(self):
         return self.status.value

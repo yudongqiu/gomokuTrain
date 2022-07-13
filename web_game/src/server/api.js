@@ -7,7 +7,7 @@ export default class AIServer {
 
 	constructor(updateState) {
     this.updateState = updateState;
-		this.socket = io('http://127.0.0.1:5005/api');
+		this.socket = io(`http://${window.location.hostname}:5005/api`);
 		this.trackStatus();
   }
 

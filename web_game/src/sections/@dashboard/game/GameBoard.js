@@ -2,6 +2,7 @@ import PropTypes, { number } from 'prop-types';
 // @mui
 import { Card, CardHeader, CardContent, Box } from '@mui/material';
 import { useState, useEffect } from 'react';
+// import { useMediaQuery } from 'react-responsive';
 // components
 
 // ----------------------------------------------------------------------
@@ -12,10 +13,28 @@ GameBoard.propTypes = {
 };
 
 // grid spacing
-const GRID_SIZE = 40;
-const PADDING = 40;
+const GRID_SIZE_DESKTOP = 40;
+const PADDING_DESKTOP = 40;
+const GRID_SIZE_MOBILE = 24;
+const PADDING_MOBILE = 16;
 
 export default function GameBoard({ title, subheader, boardState, gameState, gameSettings, handlePlayStone }) {
+
+  // adjust board size for mobile screens
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 720 || window.innerHeight < 720);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  const GRID_SIZE = isMobile ? GRID_SIZE_MOBILE : GRID_SIZE_DESKTOP;
+  const PADDING = isMobile ? PADDING_MOBILE : PADDING_DESKTOP;
+
   const stones = gameState.moveHistory.map(([i,j,player], idx) => Stone({
     row: i,
     col: j,
@@ -23,6 +42,7 @@ export default function GameBoard({ title, subheader, boardState, gameState, gam
     historyIdx: gameSettings.showHistoryIdx ? idx : undefined,
     isLastMove: idx === gameState.moveHistory.length - 1,
     isWinningLine: gameState.winningMoves.some((move) => move[0] === i && move[1] === j),
+    isMobile,
   }));
   // lazy render the intersections to improve performance
   // This is because the hover effect of all intersections needs to be updated after every move
@@ -37,13 +57,14 @@ export default function GameBoard({ title, subheader, boardState, gameState, gam
             col: j,
             onPlay: () => handlePlayStone(i,j),
             playing: gameState.playing,
-            winRate: gameState.aIWinRates[i*15+j]
+            winRate: gameState.aIWinRates[i*15+j],
+            isMobile,
           }));
         }
       }    
     }
     setIntersections(newIntersections);
-  }, [boardState, gameState]); // cache key is needed to prevent infinite loop. Only run the effect once.
+  }, [boardState, gameState, isMobile]); // cache key is needed to prevent infinite loop. Only run the effect once.
   
   /* below is the simple version without performance optimization
   const intersections = [];
@@ -102,7 +123,7 @@ export default function GameBoard({ title, subheader, boardState, gameState, gam
   return (
     <Card>
       <CardHeader title={title} subheader={subheader} />
-      <CardContent sx={{ p: 3 }}>
+      <CardContent sx={{ pl: 0, pr: 0, pt: 3, pb: 3 }}>
         <div style={boardStyle} id="board">
           <div style={gridStyle}>{stars}</div>
           {stones}
@@ -113,7 +134,9 @@ export default function GameBoard({ title, subheader, boardState, gameState, gam
   );
 }
 
-function Stone({ row, col, value, historyIdx, isLastMove, isWinningLine }) {
+function Stone({ row, col, value, historyIdx, isLastMove, isWinningLine, isMobile }) {
+  const GRID_SIZE = isMobile ? GRID_SIZE_MOBILE : GRID_SIZE_DESKTOP;
+  const PADDING = isMobile ? PADDING_MOBILE : PADDING_DESKTOP;
   const sx = {
     top: PADDING - GRID_SIZE/2 + row * GRID_SIZE+2,
     left: PADDING - GRID_SIZE/2 + col * GRID_SIZE+2,
@@ -151,7 +174,9 @@ function Stone({ row, col, value, historyIdx, isLastMove, isWinningLine }) {
   return <Box key={`stone ${row}-${col}`} sx={sx}>{historyNumber}</Box>;
 }
 
-function Intersection({ row, col, onPlay, playing, winRate }) {
+function Intersection({ row, col, onPlay, playing, winRate, isMobile }) {
+  const GRID_SIZE = isMobile ? GRID_SIZE_MOBILE : GRID_SIZE_DESKTOP;
+  const PADDING = isMobile ? PADDING_MOBILE : PADDING_DESKTOP;
   const sx = {
     top: PADDING - GRID_SIZE/2 + row * GRID_SIZE+2,
     left: PADDING - GRID_SIZE/2 + col * GRID_SIZE+2,
@@ -174,7 +199,7 @@ function Intersection({ row, col, onPlay, playing, winRate }) {
   if (winRate !== undefined) {
     // show as "50%"
     const winRatePercentage = `${parseFloat(winRate*100).toFixed(0)}%`;
-    winRateLable = <div style={{ fontSize: "13px", color: `rgba(0,0,0,${0.2+winRate*0.3})`, margin: "auto" }}>{winRatePercentage}</div>
+    winRateLable = <div style={{ fontSize: `${isMobile ? "11px" : "14px"}`, color: `rgba(0,0,0,${0.2+winRate*0.3})`, margin: "auto" }}>{winRatePercentage}</div>
     sx.backgroundColor = `rgba(100, ${winRate*255}, 100, ${0.02+winRate*0.3})`;
     // set box shadow color from red to green
     sx.boxShadow = `2px 2px 4px 2px rgba(100, ${winRate*255}, 50, ${0.05+winRate*0.3}), -2px -2px 4px 0 rgba(100, ${winRate*255}, 250, ${0.05+winRate*0.3})`;

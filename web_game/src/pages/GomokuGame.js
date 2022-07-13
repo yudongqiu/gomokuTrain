@@ -150,7 +150,7 @@ export default function GomokuGame({ aiServer, serverState }) {
         <Grid container spacing={3}>
           <Grid item xs={12} md={8} lg={9}>
             <GameBoard
-              title={gameSettings.name}
+              title={gameSettings.gameName}
               boardState={boardState}
               gameState={gameState}
               gameSettings={gameSettings}

@@ -47,6 +47,8 @@ class AIPlayer:
         Run AI prediction for all interested moves, return structured prediction data to web frontend
         """
         server_game_state = self.server_game_state(web_game_state)
+        # update level
+        self.level = web_game_state.get('aiLevel', 1)
         # prepare inputs
         state = server_game_state['state']
         show_state(state)
@@ -65,7 +67,7 @@ class AIPlayer:
 
 
         # winrates = self.dnn_evaluate(state, interested_moves, player)
-        # for move, winrate in zip(interested_moves, wrs):
+        # for move, winrate in zip(interested_moves, winrates):
         #     # convert winrate from range (-1, 1) to (0, 1)
         #     moveWinrates.append([int(move[0]), int(move[1]), float(winrate*0.5+0.5)])
         moveWinrates.sort(key=lambda l:l[-1], reverse=True)
