@@ -515,13 +515,6 @@ def find_interesting_moves(state, empty_spots_left, move_interest_values, player
                         interest_value += opponent_line_length ** 4
                     if (backward_opponent_open == True) and (opponent_line_length_back < 5):
                         interest_value += opponent_line_length_back ** 4
-                # if (r,c) == (5,5):
-                #     print("(dr,dc) =", dr,dc)
-                #     print('forward_my_open', forward_my_open, "my_line_length", my_line_length)
-                #     print('backward_my_open', backward_my_open,"my_line_length_back", my_line_length_back)
-                #     print('forward_opponent_open',forward_opponent_open,'opponent_line_length',opponent_line_length)
-                #     print('backward_opponent_open',backward_opponent_open,'opponent_line_length_back',opponent_line_length_back)
-                #     print("interest_value=", interest_value)
             # after looking at all directions, record the total interest_value of this move
             move_interest_values[r, c] += interest_value
             if interest_value > 256: # one (length_4) ** 4, highly interesting move
