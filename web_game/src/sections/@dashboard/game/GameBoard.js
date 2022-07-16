@@ -21,7 +21,7 @@ const PADDING_MOBILE = 16;
 export default function GameBoard({ title, subheader, boardState, gameState, gameSettings, handlePlayStone }) {
 
   // adjust board size for mobile screens
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 720 || window.innerHeight < 720);
 
   useEffect(() => {
     const handleResize = () => {
