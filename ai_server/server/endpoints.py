@@ -4,6 +4,7 @@ from server import app
 from server.server_manager import manager
 
 @app.route('/')
+@app.route('/dashboard/game')
 def index():
     return send_from_directory('../../web_game/build', 'index.html')
 
