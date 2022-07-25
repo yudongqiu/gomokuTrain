@@ -5,6 +5,7 @@ from server.server_namespace import server_ns
 from server.constants import ServerStatus
 from gomoku_ai.ai_player import AIPlayer
 from gomoku_ai.dnn_model import load_existing_model
+from ai_trainer.ai_trainer import AI_Trainer
 
 THIS_FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
 DATA_ROOT_PATH = os.path.realpath(os.path.join(THIS_FOLDER_PATH, '../server_data'))
@@ -16,9 +17,12 @@ def busy(method):
         if self.status == ServerStatus.BUSY:
             print(f"server is busy when {method.__name__} is called!")
             return
+        # try to pause running training
+        self.ai_trainer.pause_training()
         self.update_status(ServerStatus.BUSY)
         # run the method
         result = method(self, *method_args, **method_kwargs)
+        self.ai_trainer.resume_training()
         self.update_status(ServerStatus.IDLE)
         return result
     return _impl
@@ -35,6 +39,8 @@ class ServerManager:
         self.ai_player = self.load_dnn_model_player()
         # queue for predictions
         self.prediction_queue = []
+        # trainer to manage / monitor training process
+        self.ai_trainer = AI_Trainer(self)
 
     def load_dnn_model_player(self):
         model_file_path = os.path.join(self.root, 'dnn_model.pt')

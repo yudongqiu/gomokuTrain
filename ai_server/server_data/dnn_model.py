@@ -1,0 +1,1 @@
+../../../gomoku/swap_start/torch_train_new/latest/dnn_model.py
