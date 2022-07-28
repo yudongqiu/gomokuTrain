@@ -10,6 +10,7 @@ import NotFound from './pages/Page404';
 import Register from './pages/Register';
 import Products from './pages/Products';
 import DashboardApp from './pages/DashboardApp';
+import TrainerApp from './pages/TrainerApp';
 import GomokuGame from './pages/GomokuGame';
 
 // ----------------------------------------------------------------------
@@ -21,6 +22,7 @@ export default function Router({ aiServer, serverState }) {
       element: <DashboardLayout />,
       children: [
         { path: 'game', element: <GomokuGame aiServer={aiServer} serverState={serverState} /> },
+        { path: 'trainer', element: <TrainerApp aiServer={aiServer} serverState={serverState} /> },
         { path: 'app', element: <DashboardApp /> },
         { path: 'user', element: <User /> },
         { path: 'products', element: <Products /> },

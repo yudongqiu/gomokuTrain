@@ -12,8 +12,8 @@ const navConfig = [
     icon: getIcon('eva:play-circle-fill'),
   },
   {
-    title: 'dashboard',
-    path: '/dashboard/app',
+    title: 'trainer',
+    path: '/dashboard/trainer',
     icon: getIcon('eva:pie-chart-2-fill'),
   },
   {

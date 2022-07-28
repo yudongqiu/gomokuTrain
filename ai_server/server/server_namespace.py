@@ -23,6 +23,14 @@ class ServerNameSpace(Namespace):
         print("prediction result finished: ", prediction_result)
         self.emit("prediction", prediction_result)
 
+    def on_getMachineStats(self):
+        print("got event getMachineStats")
+        return self._manager.getMachineStats()
+
+    def on_getTrainProcess(self):
+        print("got event getTrainProcess")
+        return self._manager.getTrainProcess()
+
 
 server_ns = ServerNameSpace('/api')
 

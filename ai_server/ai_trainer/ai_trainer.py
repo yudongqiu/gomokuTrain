@@ -1,3 +1,5 @@
+import os
+import subprocess
 import psutil
 from server.constants import ServerStatus
 
@@ -63,3 +65,44 @@ class AI_Trainer:
         if self.connected() and self.check_process_status() == ServerStatus.IDLE:
             self.proc.resume()
             print("--- Trainer resumed training process ", self.proc)
+
+    def get_machine_stats(self):
+        return {
+            'cpu_usage': psutil.cpu_percent(),
+            'memory_usage': psutil.virtual_memory().percent,
+            'gpu_usage': float(subprocess.check_output("nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits", shell=True)),
+            'gpu_memory_usage': float(subprocess.check_output("nvidia-smi --query-gpu=utilization.memory --format=csv,noheader,nounits", shell=True)),
+        }
+
+    def get_train_progress(self):
+        if self.connected() and self.proc == None: return {}
+        trainer_folder = self.proc.cwd()
+        if trainer_folder.split('/')[-1].startswith("trained_model_"):
+            trainer_folder = '/'.join(trainer_folder.split('/')[:-1])
+        trained_model_names = sorted([f for f in os.listdir(trainer_folder) if f.startswith("trained_model_")])
+        def read_status(name):
+            try:
+                with open(os.path.join(trainer_folder, name, 'status_report.txt')) as f:
+                    status_line = f.readlines()[-1]
+                    lsplit = status_line.strip().split()
+                    return {
+                        'name': name,
+                        'epoch': lsplit[1],
+                        'count': lsplit[2],
+                        'loss': lsplit[5],
+                        'valLoss': lsplit[8],
+                        'time': lsplit[-1],
+                    }
+            except Exception as e:
+                print(e)
+                pass
+            return {}
+        trained_models = []
+        for name in trained_model_names:
+            model_data = read_status(name)
+            if model_data:
+                trained_models.append(model_data)
+        return {
+            'folder': trainer_folder,
+            'models': trained_models
+        }

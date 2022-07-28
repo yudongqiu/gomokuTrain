@@ -10,5 +10,6 @@ export const AIMODE = {
 export const SERVER_STATUS = {
   IDLE: 'idle',
   BUSY: 'busy',
+  TRAINING: 'training',
   NO_CONNECTION: 'no_connection',
 }

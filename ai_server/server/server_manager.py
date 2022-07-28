@@ -67,7 +67,11 @@ class ServerManager:
         game_state = self.prediction_queue.pop()
         return self.ai_player.predict(game_state)
 
+    def getMachineStats(self):
+        return self.ai_trainer.get_machine_stats()
 
+    def getTrainProcess(self):
+        return self.ai_trainer.get_train_progress()
 
 
 
