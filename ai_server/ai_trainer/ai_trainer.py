@@ -88,7 +88,7 @@ class AI_Trainer:
                     return {
                         'name': name,
                         'epoch': lsplit[1],
-                        'count': lsplit[2],
+                        'count': lsplit[2].split('/')[0],
                         'loss': lsplit[5],
                         'valLoss': lsplit[8],
                         'time': lsplit[-1],

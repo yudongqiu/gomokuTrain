@@ -21,7 +21,7 @@ import {
 const COLUMNS = [
   { field: 'name', headerName: 'Name', width: 200 },
   { field: 'epoch', headerName: 'Epoch', width: 130 },
-  { field: 'count', headerName: 'Data count', width: 230 },
+  { field: 'count', headerName: 'Data count', width: 150 },
   { field: 'loss', headerName: 'Training Loss', width: 130 },
   { field: 'valLoss', headerName: 'Validation Loss', width: 130 },
   { field: 'time', headerName: 'Epoch Time', width: 130 },

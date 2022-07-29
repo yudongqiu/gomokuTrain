@@ -17,7 +17,7 @@ AppWebsiteVisits.propTypes = {
 
 export default function AppWebsiteVisits({ title, subheader, chartLabels, chartData, ...other }) {
   const chartOptions = merge(BaseOptionChart(), {
-    plotOptions: { bar: { columnWidth: '16%' } },
+    plotOptions: { bar: { columnWidth: '30%' } },
     fill: { type: chartData.map((i) => i.fill) },
     labels: chartLabels,
     // xaxis: { type: 'datetime' },
