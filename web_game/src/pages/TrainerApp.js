@@ -27,6 +27,11 @@ const COLUMNS = [
   { field: 'time', headerName: 'Epoch Time', width: 130 },
 ]
 
+function setIntervalImmediately(func, interval) {
+  func();
+  return setInterval(func, interval);
+}
+
 export default function TrainerApp({ aiServer, serverState }) {
   const theme = useTheme();
 
@@ -34,7 +39,7 @@ export default function TrainerApp({ aiServer, serverState }) {
   const [trainProcess, setTrainProcess] = useState({models: []});
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const interval = setIntervalImmediately(() => {
       if (aiServer) {
         aiServer.socket.emit("getMachineStats", (data) => {
           setMachineStat(data)
@@ -45,7 +50,7 @@ export default function TrainerApp({ aiServer, serverState }) {
   }, [setMachineStat]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const interval = setIntervalImmediately(() => {
       if (aiServer) {
         aiServer.socket.emit("getTrainProcess", (data) => {
           setTrainProcess(data)
