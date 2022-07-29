@@ -5,14 +5,15 @@ import {
   Grid,
   Container,
   Typography,
+  Card,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 // components
 import Page from '../components/Page';
-import Iconify from '../components/Iconify';
 // sections
 import {
   AppWidgetSummary,
+  AppWebsiteVisits,
 } from '../sections/@dashboard/app';
 
 // ----------------------------------------------------------------------
@@ -54,6 +55,8 @@ export default function TrainerApp({ aiServer, serverState }) {
     return () => clearInterval(interval);    
   }, [setTrainProcess]);
 
+  // console.log(trainProcess.models.map(data => parseInt(data.epoch, 10)));
+
   return (
     <Page title="Trainer">
       <Container maxWidth="xl">
@@ -62,31 +65,60 @@ export default function TrainerApp({ aiServer, serverState }) {
         </Typography>
 
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="CPU Usage" percent={machineStat.cpu_usage} icon={'ant-design:android-filled'} />
+          <Grid item xs={6} sm={6} md={3}>
+            <AppWidgetSummary title="CPU Usage" percent={machineStat.cpu_usage|| 0} icon={'ant-design:android-filled'} />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Memory" percent={machineStat.memory_usage} color="info" icon={'ant-design:apple-filled'} />
+          <Grid item xs={6} sm={6} md={3}>
+            <AppWidgetSummary title="Memory" percent={machineStat.memory_usage|| 0} color="info" icon={'ant-design:apple-filled'} />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="GPU Usage" percent={machineStat.gpu_usage} color="warning" icon={'ant-design:windows-filled'} />
+          <Grid item xs={6} sm={6} md={3}>
+            <AppWidgetSummary title="GPU Usage" percent={machineStat.gpu_usage|| 0} color="warning" icon={'ant-design:windows-filled'} />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="GPU Memory" percent={machineStat.gpu_memory_usage} color="error" icon={'ant-design:bug-filled'} />
+          <Grid item xs={6} sm={6} md={3}>
+            <AppWidgetSummary title="GPU Memory" percent={machineStat.gpu_memory_usage || 0} color="error" icon={'ant-design:bug-filled'} />
           </Grid>
-
+          {trainProcess.models && trainProcess.models.length > 0 &&
+            <Grid item xs={12} md={12} lg={12}>
+              <AppWebsiteVisits
+                title="Training Progress"
+                subheader="MSELoss decrease"
+                chartLabels={trainProcess.models.map(data => data.name)}
+                chartData={[
+                  {
+                    name: 'Epoch',
+                    type: 'column',
+                    fill: 'solid',
+                    data: trainProcess.models.map(data => parseInt(data.epoch, 10)),
+                  },
+                  {
+                    name: 'Training Loss',
+                    type: 'area',
+                    fill: 'gradient',
+                    data: trainProcess.models.map(data => parseFloat(data.loss)),
+                  },
+                  {
+                    name: 'Validation Loss',
+                    type: 'line',
+                    fill: 'solid',
+                    data: trainProcess.models.map(data => parseFloat(data.valLoss)),
+                  },
+                ]}
+              />
+            </Grid>
+          }
           <Grid item xs={12} md={12} lg={12}>
-            <div style={{ height: 600, width: '100%' }}>
+            <Card style={{height: 600, width: '100%' }}>
               <DataGrid
                 rows={trainProcess.models}
                 getRowId={(row) => row.name || '1'}
                 columns={COLUMNS}
                 rowsPerPageOptions={[10, 25, 100]}
+                sx={{p: 2}}
               />
-            </div>
+            </Card>
           </Grid>
         </Grid>  
       </Container>
