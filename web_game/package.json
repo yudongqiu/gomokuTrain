@@ -1,9 +1,8 @@
 {
-  "name": "gomoku web game",
+  "name": "Gomoku",
   "author": "Yudong Qiu",
-  "licence": "MIT",
   "version": "0.0.1",
-  "private": false,
+  "private": true,
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
