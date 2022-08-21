@@ -1,1 +1,1 @@
-../../../gomoku/swap_start/torch_train_new/latest/dnn_model.py
+good_3x168/dnn_model.py

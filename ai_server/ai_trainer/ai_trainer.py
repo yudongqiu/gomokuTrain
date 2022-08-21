@@ -41,7 +41,8 @@ class AI_Trainer:
         if self.proc == None:
             self.find_process()
         try:
-            status = self.proc.status()
+            if self.proc != None:
+                status = self.proc.status()
         except psutil.NoSuchProcess:
             self.find_process()
         # if still not found, training does not exist

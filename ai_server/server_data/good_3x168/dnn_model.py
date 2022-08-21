@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 import torchvision
 
-torch.backends.cudnn.benchmark = True
+# torch.backends.cudnn.benchmark = True
 # device = torch.device("cuda")
 
 
@@ -40,10 +40,15 @@ class ResNetBlock(nn.Module):
         return out
 
 class DNNModel(nn.Module):
-    def __init__(self, n_stages=4, planes=256, kernel_size=3, cuda=True):
+    def __init__(self, n_stages=4, planes=256, kernel_size=3):
         super(DNNModel, self).__init__()
         # setup device
-        self.device = torch.device("cuda" if cuda else "cpu")
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        elif torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+        else:
+            self.device = torch.device("cpu")
         # transforms the data with random flips
         self.transforms = nn.Sequential(
             torchvision.transforms.RandomHorizontalFlip(),
@@ -237,7 +242,7 @@ def save_model(model, path):
 
 def load_existing_model(path):
     model = get_new_model()
-    model.load_state_dict(torch.load(path))
+    model.load_state_dict(torch.load(path, map_location=model.device))
     model.eval()
     return model
 

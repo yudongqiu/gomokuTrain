@@ -1,0 +1,14 @@
+# installation with conda
+
+## pytorch
+
+mac
+```
+conda install pytorch torchvision torchaudio -c pytorch-nightly
+```
+
+## flask, numba, others
+
+```
+conda install numba flask-socketio h5py psutil
+```
