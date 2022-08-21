@@ -43,7 +43,9 @@ class DNNModel(nn.Module):
     def __init__(self, n_stages=4, planes=256, kernel_size=3):
         super(DNNModel, self).__init__()
         # setup device
+        self.is_cuda = False
         if torch.cuda.is_available():
+            self.is_cuda = True
             self.device = torch.device("cuda")
         elif torch.backends.mps.is_available():
             self.device = torch.device("mps")
@@ -140,7 +142,8 @@ class DNNModel(nn.Module):
         min_valid_loss_idx = size
         # setup optim
         self.setup_optim()
-        scaler = torch.cuda.amp.GradScaler()
+        if self.is_cuda:
+            scaler = torch.cuda.amp.GradScaler()
         # start training
         for epoch in range(epochs):
             try:
@@ -152,15 +155,16 @@ class DNNModel(nn.Module):
                 t_start = time.time()
                 for xb, yb in train_dl:
                     xb, yb = xb.to(self.device), yb.to(self.device)
-                    with torch.cuda.amp.autocast():
+                    with torch.cuda.amp.autocast(enabled=self.is_cuda):
                         pred = self(xb)
                         loss = self.criterion(pred, yb)
-                    # loss.backward()
-                    # self.optimizer.step()
-                    scaler.scale(loss).backward()
-                    scaler.step(self.optimizer)
-                    scaler.update()
-
+                    if self.is_cuda:
+                        scaler.scale(loss).backward()
+                        scaler.step(self.optimizer)
+                        scaler.update()
+                    else:
+                        loss.backward()
+                        self.optimizer.step()
                     self.optimizer.zero_grad()
                     # print status
                     i_b += 1
@@ -173,7 +177,7 @@ class DNNModel(nn.Module):
                     self.eval()
                     with torch.no_grad():
                         valid_loss = 0.0
-                        with torch.cuda.amp.autocast():
+                        with torch.cuda.amp.autocast(enabled=self.is_cuda):
                             for xb, yb in valid_dl:
                                 xb, yb = xb.to(self.device), yb.to(self.device)
                                 valid_loss += self.criterion(self(xb), yb)
@@ -229,7 +233,7 @@ class DNNModel(nn.Module):
         # evaluation mode
         self.train(False)
         with torch.no_grad():
-            with torch.cuda.amp.autocast():
+            with torch.cuda.amp.autocast(enabled=self.is_cuda):
                 y = self(x)
         return y.cpu().numpy()
 
