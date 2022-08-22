@@ -142,8 +142,7 @@ class DNNModel(nn.Module):
         min_valid_loss_idx = size
         # setup optim
         self.setup_optim()
-        if self.is_cuda:
-            scaler = torch.cuda.amp.GradScaler()
+        scaler = torch.cuda.amp.GradScaler(enabled=self.is_cuda)
         # start training
         for epoch in range(epochs):
             try:
@@ -158,13 +157,12 @@ class DNNModel(nn.Module):
                     with torch.cuda.amp.autocast(enabled=self.is_cuda):
                         pred = self(xb)
                         loss = self.criterion(pred, yb)
-                    if self.is_cuda:
-                        scaler.scale(loss).backward()
-                        scaler.step(self.optimizer)
-                        scaler.update()
-                    else:
-                        loss.backward()
-                        self.optimizer.step()
+                    scaler.scale(loss).backward()
+                    scaler.step(self.optimizer)
+                    scaler.update()
+                    # original fitting without scaler
+                    # loss.backward()
+                    # self.optimizer.step()
                     self.optimizer.zero_grad()
                     # print status
                     i_b += 1
