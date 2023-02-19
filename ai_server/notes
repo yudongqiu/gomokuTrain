@@ -12,3 +12,10 @@ conda install pytorch torchvision torchaudio -c pytorch-nightly
 ```
 conda install numba flask-socketio h5py psutil
 ```
+
+
+## Accelerate inference using coremltools (apple neural engine)
+
+```
+pip install coremltools
+```

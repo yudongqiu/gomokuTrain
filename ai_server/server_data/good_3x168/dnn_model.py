@@ -235,6 +235,43 @@ class DNNModel(nn.Module):
                 y = self(x)
         return y.cpu().numpy()
 
+    def convert_coreml_model(self):
+        self.train(False)
+        import coremltools as ct
+        # change to CPU device
+        self.is_cuda = False
+        self.device = torch.device('cpu')
+        self.to(self.device, non_blocking=True)
+        # build a traced model
+        example_input = torch.rand(1, 3, 15, 15)
+        traced_model = torch.jit.trace(self, example_input, check_trace=False)
+        # convert to coreml model
+        input_shape = ct.Shape(shape=(64, 3, 15, 15))
+        cml_model = ct.convert(traced_model,
+            inputs=[ct.TensorType(shape=input_shape, name='x')],
+            outputs=[ct.TensorType(name="y")],
+            convert_to="mlprogram",
+            compute_units=ct.ComputeUnit.ALL,
+        )
+        # bench
+        x_train = np.random.randint(0, 2, size=(64,3,15,15)).astype(np.float16)
+        import time
+        t1 = time.time()
+        for _ in range(100):
+            cml_model.predict({'x': x_train})['y']
+        print('benchmark 100 prediction: ', time.time() - t1)
+        # override predict function
+        self.cml_model = cml_model
+        self.predict = self.coreml_predict
+        self.predict_data = np.zeros([64,3,15,15], dtype=np.float16)
+        # print success
+        print('Successfully set up coreML model for inference!')
+
+    def coreml_predict(self, x):
+        assert len(x) <= len(self.predict_data), "buffer for coreML is not enough"
+        self.predict_data[:len(x)] = x
+        return self.cml_model.predict({'x': self.predict_data})['y'][:len(x)]
+
 
 def get_new_model():
     return DNNModel(n_stages=3, planes=168, kernel_size=3)
@@ -242,16 +279,22 @@ def get_new_model():
 def save_model(model, path):
     torch.save(model.state_dict(), path)
 
-def load_existing_model(path):
+def load_existing_model(path, no_training=False):
     model = get_new_model()
     model.load_state_dict(torch.load(path, map_location=model.device))
     model.eval()
+    # try to use coremltools and run on Apple Neural Engine (ANE)
+    if no_training:
+        try:
+            model.convert_coreml_model()
+        except ModuleNotFoundError:
+            pass
     return model
 
 #
 def test_model():
     size = 3000
-    x_train = np.random.randint(0, 1, size=(size,3,15,15)).astype(np.float32)
+    x_train = np.random.randint(0, 2, size=(size,3,15,15)).astype(np.float32)
     y_train = np.random.random(size).astype(np.float32) * 2 - 1
     model = get_new_model()
     print(model)

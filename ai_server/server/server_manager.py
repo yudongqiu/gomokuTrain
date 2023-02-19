@@ -44,7 +44,7 @@ class ServerManager:
 
     def load_dnn_model_player(self):
         model_file_path = os.path.join(self.root, 'dnn_model.pt')
-        dnn_model = load_existing_model(model_file_path)
+        dnn_model = load_existing_model(model_file_path, no_training=True)
         print("Load dnn model successfully from ", model_file_path)
         return AIPlayer("AI", model=dnn_model, level=1)
 
